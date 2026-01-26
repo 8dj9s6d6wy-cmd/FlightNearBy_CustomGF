@@ -5,7 +5,7 @@ Description: Flights nearby using data from Flightradar integration in HA
 Author: motoridersd (Modified by Ffeog187)
 """
 
-load("cache.star", "cache")
+"""load("cache.star", "cache")
 load("db.star", "DB")
 load("encoding/json.star", "json")
 load("http.star", "http")
@@ -41,7 +41,7 @@ load("images/twin_small.png", TWIN_SMALL_ASSET = "file")
 load("images/twin_small@2x.png", TWIN_SMALL_ASSET_2X = "file")
 load("images/unknown.png", UNKNOWN_ASSET = "file")
 load("images/unknown@2x.png", UNKNOWN_ASSET_2X = "file")
-load("render.star", "canvas", "render")
+load("render.star", "canvas", "render")""
 load("schema.star", "schema")
 
 SHAPES = {
