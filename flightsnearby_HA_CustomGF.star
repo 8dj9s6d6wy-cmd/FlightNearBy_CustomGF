@@ -383,9 +383,8 @@ def skip_execution():
 
 def filter_flight(flight):
     return all([
-            flight["airline_icao"],
-            flight["altitude"] >= 1000,
-    ])
+            flight["airline_icao"] == 'EJA',
+        ])
 
 def main(config):
     #If hardcoding HA info in applet, replace values below with yours. REMOVE EVERYTHING AFTER THE = and add your values
