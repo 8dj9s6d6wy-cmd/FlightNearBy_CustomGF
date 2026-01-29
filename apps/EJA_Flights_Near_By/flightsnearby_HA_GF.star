@@ -1,8 +1,8 @@
 """
-Applet: Flights Nearby HA Flightradar EJA ONLY
-Summary: Flights Nearby HA EJA ONLY
+Applet: Flights Nearby HA Flightradar
+Summary: Flights Nearby HA
 Description: Flights nearby using data from Flightradar integration in HA
-Author: Ffeog187
+Author: motoridersd
 """
 
 load("cache.star", "cache")
@@ -533,9 +533,10 @@ def render_radar_view(flight, home_lat, home_lon, angle_offset = 0, scale = 1, c
         ],
     )
 
-def filter_flight(flight):
+def filter_flight(flight, show_all_aircraft = False):
+    allowed_airlines = ["EJA", "EJM"]
     return all([
-        flight["airline_icao"] in ["EJA", "EJM"],
+        flight["airline_icao"] in allowed_airlines,
     ])
 
 def main(config):
@@ -543,12 +544,13 @@ def main(config):
     #For example, ha_server = "http://192.168.1.100:8123"
     #The config.get strings are only used for serving the applet via pixlet serve
     #ha_server, entity_id and token have to be updated with your own values.
-    ha_server = "https://ayh9tclywhwnt4zutwfmkrp9uppx5xwy.ui.nabu.casa" #config.get("homeassistant_server")  #Don't forget to include a port at the end of the URL if using one
-    entity_id = "sensor.kcmh_current_in_area" #config.get("homeassistant_entity_id")  #The FlightRadar24 Integration sensor, default is 'sensor.flightradar24_current_in_area'
-    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2Y2NjMGNmZmFkOWY0ZTY1ODFlZWMwYjEzZGFkN2NmYiIsImlhdCI6MTc2OTYzOTQzMywiZXhwIjoyMDg0OTk5NDMzfQ.xSVHr4gV2tf7CjPtD0Pf9wH58QXx8vpQB790YktOTpE" #config.get("homeassistant_token")  #Your long lived access token
+    ha_server = config.get("homeassistant_server")  #Don't forget to include a port at the end of the URL if using one
+    entity_id = config.get("homeassistant_entity_id")  #The FlightRadar24 Integration sensor, default is 'sensor.flightradar24_current_in_area'
+    token = config.get("homeassistant_token")  #Your long lived access token
     radar_offset_str = config.get("radar_degree_offset", "0")
     radar_offset = int(radar_offset_str) if radar_offset_str.isdigit() else 0
-    
+    show_all_aircraft = config.bool("show_all_aircraft")
+
     airhex_url2 = config.get("airhex_tail_direction", "_30_30_f.png")
     if canvas.is2x():
         airhex_url2 = airhex_url2.replace("30_30", "60_60")
@@ -586,7 +588,7 @@ def main(config):
         entity_status = get_entity_status(ha_server, entity_id, token)
         extracted_attributes = entity_status["attributes"] if entity_status and "attributes" in entity_status else dict()
         flights = extracted_attributes["flights"] if "flights" in extracted_attributes else dict()
-        matches_filters = [flight for flight in flights if filter_flight(flight)]
+        matches_filters = [flight for flight in flights if filter_flight(flight, show_all_aircraft)]
         sorted_matches = sorted(
             matches_filters,
             key = lambda flight: flight["altitude"],
@@ -687,7 +689,7 @@ def main(config):
 
     if radar:
         return render.Root(
-            delay = 3000,
+            delay = 7500,
             child = render.Animation(
                 children = [display, radar],
             ),
@@ -719,22 +721,37 @@ def get_schema():
                 icon = "server",
             ),
             schema.Text(
-                id = "homeassistant_entity_id",
-                name = "Entity ID",
-                icon = "play",
-                desc = "Entity ID of the media player entity in Home Assistant",
-            ),
-            schema.Text(
                 id = "homeassistant_token",
                 name = "Bearer Token",
                 icon = "key",
                 desc = "Long-lived access token for Home Assistant",
             ),
             schema.Text(
+                id = "homeassistant_entity_id",
+                name = "Entity ID",
+                icon = "play",
+                desc = "Entity ID of the media player entity in Home Assistant",
+            ),
+            schema.Dropdown(
+                id = "airhex_tail_direction",
+                name = "Tail Direction",
+                icon = "plane",
+                desc = "Choose which tail logo you would like to use",
+                default = airhex_logo_option[1].value,
+                options = airhex_logo_option,
+            ),
+            schema.Toggle(
+                id = "show_all_aircraft",
+                name = "Show All Aircraft",
+                desc = "Show all aircraft, not just commercial ones",
+                icon = "plane",
+                default = False,
+            ),
+            schema.Text(
                 id = "radar_degree_offset",
                 name = "Radar Degree Offset",
                 icon = "compass",
-                desc = "Rotate the radar view by this many degrees (e.g., 180 for due South).  Allows you to align the radar with the view out your window.",
+                desc = "Rotate the radar view by this many degrees (e.g., 180 for due South).",
                 default = "0",
             ),
             schema.Color(
@@ -778,21 +795,6 @@ def get_schema():
                 desc = "Color of the speed text",
                 icon = "brush",
                 default = "#ffff00",
-            ),
-            schema.Dropdown(
-                id = "airhex_tail_direction",
-                name = "Tail Direction",
-                icon = "plane",
-                desc = "Choose which tail logo you would like to use",
-                default = airhex_logo_option[1].value,
-                options = airhex_logo_option,
-            ),
-            schema.Toggle(
-                id = "show_all_aircraft",
-                name = "Show All Aircraft",
-                desc = "Show all aircraft, not just commercial ones",
-                icon = "plane",
-                default = False,
             ),
         ],
     )
