@@ -533,7 +533,7 @@ def render_radar_view(flight, home_lat, home_lon, angle_offset = 0, scale = 1, c
         ],
     )
 
-def filter_flight(flight, show_all_aircraft = False):
+def filter_flight(flight):
     return all([
         flight["airline_icao"] in ["EJA", "EJM"],
     ])
@@ -548,8 +548,7 @@ def main(config):
     token = config.get("homeassistant_token")  #Your long lived access token
     radar_offset_str = config.get("radar_degree_offset", "0")
     radar_offset = int(radar_offset_str) if radar_offset_str.isdigit() else 0
-    show_all_aircraft = config.bool("show_all_aircraft")
-
+    
     airhex_url2 = config.get("airhex_tail_direction", "_30_30_f.png")
     if canvas.is2x():
         airhex_url2 = airhex_url2.replace("30_30", "60_60")
@@ -587,7 +586,7 @@ def main(config):
         entity_status = get_entity_status(ha_server, entity_id, token)
         extracted_attributes = entity_status["attributes"] if entity_status and "attributes" in entity_status else dict()
         flights = extracted_attributes["flights"] if "flights" in extracted_attributes else dict()
-        matches_filters = [flight for flight in flights if filter_flight(flight, show_all_aircraft)]
+        matches_filters = [flight for flight in flights if filter_flight(flight)]
         sorted_matches = sorted(
             matches_filters,
             key = lambda flight: flight["altitude"],
