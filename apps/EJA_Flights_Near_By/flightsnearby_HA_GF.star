@@ -1,8 +1,8 @@
 """
-Applet: Flights Nearby HA Flightradar
-Summary: Flights Nearby HA
+Applet: EJA Flights Near By HA
+Summary: EJA Flights Nearby HA
 Description: Flights nearby using data from Flightradar integration in HA
-Author: motoridersd
+Author: motoridersd (Modified by FFeog187)
 """
 
 load("cache.star", "cache")
