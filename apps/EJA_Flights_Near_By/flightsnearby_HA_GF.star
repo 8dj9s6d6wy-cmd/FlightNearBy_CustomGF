@@ -543,9 +543,9 @@ def main(config):
     #For example, ha_server = "http://192.168.1.100:8123"
     #The config.get strings are only used for serving the applet via pixlet serve
     #ha_server, entity_id and token have to be updated with your own values.
-    ha_server = config.get("homeassistant_server")  #Don't forget to include a port at the end of the URL if using one
-    entity_id = config.get("homeassistant_entity_id")  #The FlightRadar24 Integration sensor, default is 'sensor.flightradar24_current_in_area'
-    token = config.get("homeassistant_token")  #Your long lived access token
+    ha_server = "https://ayh9tclywhwnt4zutwfmkrp9uppx5xwy.ui.nabu.casa" #config.get("homeassistant_server")  #Don't forget to include a port at the end of the URL if using one
+    entity_id = "sensor.kcmh_eja_jets_in_area" #config.get("homeassistant_entity_id")  #The FlightRadar24 Integration sensor, default is 'sensor.flightradar24_current_in_area'
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2Y2NjMGNmZmFkOWY0ZTY1ODFlZWMwYjEzZGFkN2NmYiIsImlhdCI6MTc2OTYzOTQzMywiZXhwIjoyMDg0OTk5NDMzfQ.xSVHr4gV2tf7CjPtD0Pf9wH58QXx8vpQB790YktOTpE" #config.get("homeassistant_token")  #Your long lived access token
     radar_offset_str = config.get("radar_degree_offset", "0")
     radar_offset = int(radar_offset_str) if radar_offset_str.isdigit() else 0
     
