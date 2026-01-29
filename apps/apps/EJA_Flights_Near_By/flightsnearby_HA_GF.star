@@ -1,8 +1,8 @@
 """
-Applet: Flights Nearby HA Flightradar
-Summary: Flights Nearby HA
+Applet: Flights Nearby HA Flightradar EJA ONLY
+Summary: Flights Nearby HA EJA ONLY
 Description: Flights nearby using data from Flightradar integration in HA
-Author: motoridersd
+Author: Ffeog187
 """
 
 load("cache.star", "cache")
@@ -535,8 +535,7 @@ def render_radar_view(flight, home_lat, home_lon, angle_offset = 0, scale = 1, c
 
 def filter_flight(flight, show_all_aircraft = False):
     return all([
-         flight["airline_icao"] = "EJA",
-        
+        flight["airline_icao"] in ["EJA", "EJM"],
     ])
 
 def main(config):
