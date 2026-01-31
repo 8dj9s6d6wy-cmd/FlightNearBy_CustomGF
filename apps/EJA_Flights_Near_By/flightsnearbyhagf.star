@@ -10846,11 +10846,15 @@ def skip_execution():
     print("skip_execution")
     return []
 
-def filter_flight(flight, show_all_aircraft = False):
-    allowed_airlines = ["EJA", "EJM"]
-    return all([
-        flight["airline_icao"] in allowed_airlines,
-    ])
+def filter_flight(flight):
+    reg = flight.get("registration", "")
+    return (
+        reg.startswith("N")
+        and reg.endswith("QS")
+        and flight.get("altitude", 0) > 0
+        and flight.get("speed", 0) > 0
+    )
+
 
 def main(config):
     #If hardcoding HA info in applet, replace values below with yours. REMOVE EVERYTHING AFTER THE = and add your values
