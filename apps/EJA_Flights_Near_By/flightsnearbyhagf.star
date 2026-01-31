@@ -10847,10 +10847,13 @@ def skip_execution():
     return []
 
 def filter_flight(flight, *args):
-    reg = flight.get("aircraft_registration", "")
+    reg = flight.get("aircraft_registration") or ""
     return reg.startswith("N") and reg.endswith("QS")
 
-
+    nearby_qs_flights = sorted(
+        filter(filter_flight, flights),
+        key=lambda f: f.get("distance", 999999)
+    )
 
 def main(config):
     #If hardcoding HA info in applet, replace values below with yours. REMOVE EVERYTHING AFTER THE = and add your values
