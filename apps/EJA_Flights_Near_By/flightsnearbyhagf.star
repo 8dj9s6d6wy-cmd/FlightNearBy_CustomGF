@@ -10846,14 +10846,10 @@ def skip_execution():
     print("skip_execution")
     return []
 
-def filter_flight(flight):
-    reg = flight.get("registration", "")
-    return (
-        reg.startswith("N")
-        and reg.endswith("QS")
-        and flight.get("altitude", 0) > 0
-        and flight.get("speed", 0) > 0
-    )
+def filter_flight(flight, *args):
+    reg = flight.get("aircraft_registration", "")
+    return reg.startswith("N") and reg.endswith("QS")
+
 
 
 def main(config):
@@ -10906,7 +10902,7 @@ def main(config):
         matches_filters = [flight for flight in flights if filter_flight(flight, show_all_aircraft)]
         sorted_matches = sorted(
             matches_filters,
-            key = lambda flight: flight["time_scheduled_departure"],
+            key = lambda flight: flight["distance"],
             reverse = False,
         )
 
