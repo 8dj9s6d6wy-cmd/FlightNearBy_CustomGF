@@ -10902,7 +10902,7 @@ def main(config):
         matches_filters = [flight for flight in flights if filter_flight(flight, show_all_aircraft)]
         sorted_matches = sorted(
             matches_filters,
-            key = lambda flight: flight["altitude"],
+            key = lambda flight: flight["time_scheduled_departure"],
             reverse = False,
         )
 
