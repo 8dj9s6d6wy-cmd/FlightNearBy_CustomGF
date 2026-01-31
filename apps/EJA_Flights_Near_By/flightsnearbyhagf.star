@@ -10842,129 +10842,9 @@ def get_ha_location(base_url, token):
     data = res.json()
     return data.get("latitude"), data.get("longitude")
 
-def calculate_radar_position(home_lat, home_lon, plane_lat, plane_lon, angle_offset = 0, radius_km = 50):
-    # Simplified equirectangular projection for small distances
-    # Scale: 32x32 radar screen, center at (16, 16)
-
-    # Approx km per degree
-    lat_deg_km = 111.0
-    lon_deg_km = 111.0 * math.cos(math.radians(home_lat))
-
-    # Relative coordinates in KM (Standard math: +Y North, +X East)
-    # Original dy_km was (home - plane) * lat_deg => home(0) - plane(1) = -1. So +1 lat (North) gives -1 dy.
-    # We want Standard Math Y: North is +Y. So (plane - home).
-    rel_y = (plane_lat - home_lat) * lat_deg_km
-    rel_x = (plane_lon - home_lon) * lon_deg_km
-
-    # Rotate if offset provided
-    if angle_offset != 0:
-        angle_rad = math.radians(angle_offset)
-        # Rotate point by +angle_offset (CCW) corresponds to rotating axes by -angle_offset?
-        # Based on analysis: Point (1,0) [East] with Offset 90 should define East as Up (0,1).
-        # (1,0) -> (0,1) is +90 deg rotation.
-
-        cos_a = math.cos(angle_rad)
-        sin_a = math.sin(angle_rad)
-
-        rx = rel_x * cos_a - rel_y * sin_a
-        ry = rel_x * sin_a + rel_y * cos_a
-        rel_x = rx
-        rel_y = ry
-
-    scale_factor = 16.0 / radius_km
-
-    # Map to screen coordinates
-    # Screen X: 16 + rel_x * scale
-    # Screen Y: 16 - rel_y * scale (because Y is inverted on screen: Up is -y)
-
-    x = 16 + (rel_x * scale_factor)
-    y = 16 - (rel_y * scale_factor)
-
-    # Clamp to screen
-    x = max(0, min(32, x))
-    y = max(0, min(32, y))
-
-    return x, y
-
 def skip_execution():
     print("skip_execution")
     return []
-
-def render_radar_view(flight, home_lat, home_lon, angle_offset = 0, scale = 1, colors = None, plane_img = None):
-    if not home_lat or not home_lon:
-        return render.Box(width = 64 * scale, height = 32 * scale, color = "#000", child = render.Text("No Loc"))
-
-    plane_lat = flight["latitude"]
-    plane_lon = flight["longitude"]
-
-    px, py = calculate_radar_position(home_lat, home_lon, plane_lat, plane_lon, angle_offset)
-
-    radar_visual = render.Stack(
-        children = [
-            render.Box(width = 32 * scale, height = 32 * scale, color = "#001100"),
-            # Outer ring
-            render.Circle(diameter = 32 * scale, color = colors["radar"]),
-            render.Padding(
-                pad = (1 * scale, 1 * scale, 0, 0),
-                child = render.Circle(diameter = 30 * scale, color = "#001100"),
-            ),
-            # Inner ring
-            render.Padding(
-                pad = (8 * scale, 8 * scale, 0, 0),
-                child = render.Circle(diameter = 16 * scale, color = colors["radar"]),
-            ),
-            render.Padding(
-                pad = (9 * scale, 9 * scale, 0, 0),
-                child = render.Circle(diameter = 14 * scale, color = "#001100"),
-            ),
-            # Center
-            render.Padding(
-                pad = (15 * scale, 15 * scale, 0, 0),
-                child = render.Box(width = 2 * scale, height = 2 * scale, color = colors["home"]),
-            ),
-            # Plane Symbol
-            # Wrapped in a container to center the rotation
-            render.Padding(
-                pad = (int((px * scale) - (8 * scale)), int((py * scale) - (8 * scale)), 0, 0),
-                child = render.Box(
-                    width = 16 * scale,
-                    height = 16 * scale,
-                    child = render.Column(
-                        expanded = True,
-                        main_align = "center",
-                        cross_align = "center",
-                        children = [
-                            filter.Rotate(
-                                angle = flight["heading"] - angle_offset,
-                                child = render.Image(src = plane_img, width = 10 * scale, height = 10 * scale) if plane_img else render.Box(width = 2 * scale, height = 2 * scale, color = "#ff0000"),
-                            ),
-                        ],
-                    ),
-                ),
-            ),
-        ],
-    )
-
-    return render.Row(
-        expanded = True,
-        main_align = "start",
-        cross_align = "center",
-        children = [
-            radar_visual,
-            render.Box(width = 1 * scale, height = 32 * scale, color = "#000"),  # Spacer
-            render.Column(
-                expanded = True,
-                main_align = "space_evenly",
-                cross_align = "start",
-                children = [
-                    render.Text("Alt: %dk" % int((flight.get("altitude", 0) + 500) / 1000), font = "tom-thumb", color = colors["alt"]),
-                    render.Text("Dst: %d" % int(flight.get("distance", 0)), font = "tom-thumb", color = colors["dst"]),
-                    render.Text("Hdg: %d" % int(flight.get("heading", 0)), font = "tom-thumb", color = colors["hdg"]),
-                    render.Text("Spd: %d" % int(flight.get("ground_speed", 0)), font = "tom-thumb", color = colors["spd"]),
-                ],
-            ),
-        ],
-    )
 
 def filter_flight(flight, show_all_aircraft = False):
     allowed_airlines = ["EJA", "EJM"]
@@ -10980,8 +10860,6 @@ def main(config):
     ha_server = config.get("homeassistant_server")  #Don't forget to include a port at the end of the URL if using one
     entity_id = config.get("homeassistant_entity_id")  #The FlightRadar24 Integration sensor, default is 'sensor.flightradar24_current_in_area'
     token = config.get("homeassistant_token")  #Your long lived access token
-    radar_offset_str = config.get("radar_degree_offset", "0")
-    radar_offset = int(radar_offset_str) if radar_offset_str.isdigit() else 0
     show_all_aircraft = config.bool("show_all_aircraft")
 
     airhex_url2 = config.get("airhex_tail_direction", "_30_30_f.png")
@@ -11080,7 +10958,7 @@ def main(config):
                     height = 10 * scale,
                     child = filter.Rotate(
                         child = render.Image(tiny_ico, height = 10 * scale),
-                        angle = sorted_matches[0].get("heading", 0) - radar_offset,
+                        angle = 0,
                     ),
                 ),
                 render.Text(" %s" % sorted_matches[0]["aircraft_code"]),
@@ -11107,26 +10985,6 @@ def main(config):
             ),
         ],
     )
-
-    radar = None
-    if home_lat and home_lon:
-        radar_colors = {
-            "radar": config.get("radar_color", "#003300"),
-            "home": config.get("home_color", "#00ff00"),
-            "alt": config.get("altitude_color", "#ff0000"),
-            "dst": config.get("distance_color", "#00ff00"),
-            "hdg": config.get("heading_color", "#0000ff"),
-            "spd": config.get("speed_color", "#ffff00"),
-        }
-        radar = render_radar_view(sorted_matches[0], home_lat, home_lon, radar_offset, scale, radar_colors, tiny_ico)
-
-    if radar:
-        return render.Root(
-            delay = 7500,
-            child = render.Animation(
-                children = [display, radar],
-            ),
-        )
 
     return render.Root(
         child = display,
@@ -11180,54 +11038,6 @@ def get_schema():
                 icon = "plane",
                 default = False,
             ),
-            schema.Text(
-                id = "radar_degree_offset",
-                name = "Radar Degree Offset",
-                icon = "compass",
-                desc = "Rotate the radar view by this many degrees (e.g., 180 for due South).",
-                default = "0",
-            ),
-            schema.Color(
-                id = "radar_color",
-                name = "Radar Color",
-                desc = "Color of the radar rings",
-                icon = "brush",
-                default = "#003300",
-            ),
-            schema.Color(
-                id = "home_color",
-                name = "Home Color",
-                desc = "Color of the home dot",
-                icon = "brush",
-                default = "#00ff00",
-            ),
-            schema.Color(
-                id = "altitude_color",
-                name = "Altitude Color",
-                desc = "Color of the altitude text",
-                icon = "brush",
-                default = "#ff0000",
-            ),
-            schema.Color(
-                id = "distance_color",
-                name = "Distance Color",
-                desc = "Color of the distance text",
-                icon = "brush",
-                default = "#00ff00",
-            ),
-            schema.Color(
-                id = "heading_color",
-                name = "Heading Color",
-                desc = "Color of the heading text",
-                icon = "brush",
-                default = "#0000ff",
-            ),
-            schema.Color(
-                id = "speed_color",
-                name = "Speed Color",
-                desc = "Color of the speed text",
-                icon = "brush",
-                default = "#ffff00",
-            ),
+
         ],
     )
