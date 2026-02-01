@@ -2349,7 +2349,7 @@ def skip_execution():
     print("skip_execution")
     return []
 
-def filter_flight(flight, *args):
+def filter_flight(flight):
     # default filter - only show US registrations that end with QS
     reg = flight.get("aircraft_registration") or ""
     return reg.startswith("N") and reg.endswith("QS")
@@ -2380,14 +2380,14 @@ def main(config):
     if not ha_server or not entity_id or not token:
         # Dummy data for preview
         sorted_matches = [{
-            "airline_icao": "UAL",
+            "airline_icao": "EJA",
             "altitude": 35000,
-            "flight_number": "UA531",
-            "callsign": "UAL531",
-            "airport_origin_code_iata": "DEN",
-            "airport_destination_code_iata": "LAX",
-            "aircraft_code": "B39M",
-            "heading": 45,
+            "flight_number": "EJA614",
+            "callsign": "EJA614",
+            "airport_origin_code_iata": "CMH",
+            "airport_destination_code_iata": "OSU",
+            "aircraft_code": "E55P",
+            "heading": 270,
             "latitude": 39.9,
             "longitude": -104.9,
             "distance": 10,
@@ -2540,6 +2540,13 @@ def get_schema():
                 id = "show_all_aircraft",
                 name = "Show All Aircraft",
                 desc = "Show all aircraft, not just commercial ones",
+                icon = "plane",
+                default = False,
+            ),
+            schema.Toggle(
+                id = "show_dummy_info",
+                name = "Show dummy info",
+                desc = "Show the dummy info",
                 icon = "plane",
                 default = False,
             ),
