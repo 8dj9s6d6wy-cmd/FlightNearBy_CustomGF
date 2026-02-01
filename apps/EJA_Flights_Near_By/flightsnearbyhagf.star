@@ -2401,7 +2401,7 @@ def main(config):
         entity_status = get_entity_status(ha_server, entity_id, token)
         extracted_attributes = entity_status["attributes"] if entity_status and "attributes" in entity_status else dict()
         flights = extracted_attributes["flights"] if "flights" in extracted_attributes else dict()
-        matches_filters = [flight for flight in flights if filter_flight(flight, show_all_aircraft)]
+        matches_filters = [flight for flight in flights if filter_flight(flight)]
         sorted_matches = sorted(
             matches_filters,
             key = lambda flight: flight["distance"],
@@ -2416,11 +2416,11 @@ def main(config):
         return skip_execution()
 
     if media_image == None:
-        if "airline_icao" in sorted_matches[0] and sorted_matches[0]["airline_icao"]:
+        if "airline_icao" == 'EJA':
+            media_image = NJA_TAIL.readall()
+        elif "airline_icao" in sorted_matches[0] and sorted_matches[0]["airline_icao"]:
             res = http.get("%s%s%s" % (airhex_url1, sorted_matches[0]["airline_icao"], airhex_url2), ttl_seconds = 86400)
             media_image = res.body()
-        elif "airline_icao" == 'EJA':
-            media_image = NJA_TAIL.readall()
         else:
             # Use small icon as fallback for non-commercial
             airplane_shape = get_airplane_shape(sorted_matches[0])
