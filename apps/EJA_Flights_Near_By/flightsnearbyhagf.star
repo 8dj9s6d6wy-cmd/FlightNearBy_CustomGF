@@ -42,7 +42,7 @@ load("images/twin_small.png", TWIN_SMALL_ASSET = "file")
 load("images/twin_small@2x.png", TWIN_SMALL_ASSET_2X = "file")
 load("images/unknown.png", UNKNOWN_ASSET = "file")
 load("images/unknown@2x.png", UNKNOWN_ASSET_2X = "file")
-load("images/NJALogo.png", NJA_Tail = "file")
+load("images/NJALogo.png", NJA_TAIL = "file")
 load("math.star", "math")
 load("render.star", "canvas", "render")
 load("schema.star", "schema")
@@ -2420,7 +2420,7 @@ def main(config):
             res = http.get("%s%s%s" % (airhex_url1, sorted_matches[0]["airline_icao"], airhex_url2), ttl_seconds = 86400)
             media_image = res.body()
         elif "airline_icao" == 'EJA':
-            media_image = NJA_Tail
+            media_image = NJA_TAIL.readall()
         else:
             # Use small icon as fallback for non-commercial
             airplane_shape = get_airplane_shape(sorted_matches[0])
