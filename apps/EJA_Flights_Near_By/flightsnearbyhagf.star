@@ -2548,10 +2548,10 @@ def get_schema():
             ),
             schema.Toggle(
                 id = "show_dummy_info",
-                name = "Show dummy info",
-                desc = "Show the dummy info",
+                name = "Hide dummy info",
+                desc = "Hide the dummy info",
                 icon = "plane",
-                default = False,
+                default = True,
             ),
 
         ],
