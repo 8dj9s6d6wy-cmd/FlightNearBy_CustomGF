@@ -2320,7 +2320,7 @@ def get_entity_status(ha_server, entity_id, token, show_dummy_info):
     if token == None:
         #fail("Bearer token not configured")
         return None
-    if show_dummy_info = TRUE:
+    if show_dummy_info == true:
         return None
 
     state_res = None
