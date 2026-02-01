@@ -2380,7 +2380,7 @@ def main(config):
     home_lon = None
     media_image = None
 
-    if not ha_server or not entity_id or not token or not show_dummy_info:
+    if not ha_server or not entity_id or not token or show_dummy_info:
         # Dummy data for preview
         sorted_matches = [{
             "airline_icao": "EJA",
