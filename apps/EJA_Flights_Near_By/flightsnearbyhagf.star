@@ -2320,7 +2320,7 @@ def get_entity_status(ha_server, entity_id, token, show_dummy_info):
     if token == None:
         #fail("Bearer token not configured")
         return None
-    if show_dummy_info == true:
+    if show_dummy_info == True:
         return None
 
     state_res = None
@@ -2419,7 +2419,7 @@ def main(config):
         return skip_execution()
 
     if media_image == None:
-        if "airline_icao" == 'EJA':
+        if sorted_matches[0].get("airline_icao") == 'EJA':
             media_image = NJA_TAIL.readall()
         elif "airline_icao" in sorted_matches[0] and sorted_matches[0]["airline_icao"]:
             res = http.get("%s%s%s" % (airhex_url1, sorted_matches[0]["airline_icao"], airhex_url2), ttl_seconds = 86400)
