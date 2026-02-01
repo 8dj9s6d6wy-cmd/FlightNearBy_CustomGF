@@ -2320,7 +2320,7 @@ def get_entity_status(ha_server, entity_id, token, show_dummy_info):
     if token == None:
         #fail("Bearer token not configured")
         return None
-    if show_dummy_info == True:
+    if show_dummy_info == False:
         return None
 
     state_res = None
@@ -2385,8 +2385,8 @@ def main(config):
         sorted_matches = [{
             "airline_icao": "EJA",
             "altitude": 35000,
-            "flight_number": "EJA614",
-            "callsign": "EJA614",
+            "flight_number": "EJA FAKE",
+            "callsign": "EJA FAKE",
             "airport_origin_code_iata": "CMH",
             "airport_destination_code_iata": "OSU",
             "aircraft_code": "E55P",
