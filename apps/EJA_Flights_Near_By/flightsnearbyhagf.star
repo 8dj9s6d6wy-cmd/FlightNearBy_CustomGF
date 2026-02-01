@@ -2393,7 +2393,7 @@ def main(config):
         sorted_matches = [{
             "airline_icao": "EJA",
             "altitude": 35000,
-            "flight_number": "EJA FAKE",
+            "flight_number": "EJA Demo Data",
             "callsign": "EJA FAKE",
             "airport_origin_code_iata": "CMH",
             "airport_destination_code_iata": "OSU",
@@ -2567,6 +2567,6 @@ def get_schema():
                 desc = "Enable debug logging and error display",
                 icon = "bug",
                 default = False,
-)
+            ),    
         ],
     )
