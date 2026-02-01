@@ -2374,6 +2374,7 @@ def main(config):
     token = config.get("homeassistant_token")  #Your long lived access token
     show_all_aircraft = config.bool("show_all_aircraft")
     show_dummy_info = config.bool("show_dummy_info")
+    DEBUG_ENABLED = config.bool("debug_mode", False)
 
     airhex_url2 = config.get("airhex_tail_direction", "_30_30_f.png")
     if canvas.is2x():
