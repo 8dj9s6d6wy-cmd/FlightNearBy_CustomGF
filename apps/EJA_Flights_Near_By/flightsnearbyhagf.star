@@ -2356,6 +2356,14 @@ def filter_flight(flight):
     reg = flight.get("aircraft_registration") or ""
     return reg.startswith("N") and reg.endswith("QS")
 
+def debug_print(message, data = None):
+    """Print debug messages when DEBUG_ENABLED is True"""
+    if DEBUG_ENABLED:
+        if data != None:
+            print("[DEBUG] %s: %s" % (message, data))
+        else:
+            print("[DEBUG] %s" % message)
+
 def main(config):
     #If hardcoding HA info in applet, replace values below with yours. REMOVE EVERYTHING AFTER THE = and add your values
     #For example, ha_server = "http://192.168.1.100:8123"
@@ -2553,6 +2561,12 @@ def get_schema():
                 icon = "plane",
                 default = False,
             ),
-
+            schema.Toggle(
+                id = "debug_mode",
+                name = "Debug Mode",
+                desc = "Enable debug logging and error display",
+                icon = "bug",
+                default = False,
+)
         ],
     )
