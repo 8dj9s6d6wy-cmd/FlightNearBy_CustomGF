@@ -2308,7 +2308,7 @@ def get_airplane_shape(flight):
 
     return SHAPES["unknown"]
 
-def get_entity_status(ha_server, entity_id, token):
+def get_entity_status(ha_server, entity_id, token, show_dummy_info):
     if ha_server == None:
         #fail("Home Assistant server not configured")
         return None
@@ -2319,6 +2319,8 @@ def get_entity_status(ha_server, entity_id, token):
 
     if token == None:
         #fail("Bearer token not configured")
+        return None
+    if show_dummy_info = TRUE:
         return None
 
     state_res = None
@@ -2363,6 +2365,7 @@ def main(config):
     entity_id = config.get("homeassistant_entity_id")  #The FlightRadar24 Integration sensor, default is 'sensor.flightradar24_current_in_area'
     token = config.get("homeassistant_token")  #Your long lived access token
     show_all_aircraft = config.bool("show_all_aircraft")
+    show_dummy_info = config.bool("show_dummy_info")
 
     airhex_url2 = config.get("airhex_tail_direction", "_30_30_f.png")
     if canvas.is2x():
@@ -2377,7 +2380,7 @@ def main(config):
     home_lon = None
     media_image = None
 
-    if not ha_server or not entity_id or not token:
+    if not ha_server or not entity_id or not token or not show_dummy_info:
         # Dummy data for preview
         sorted_matches = [{
             "airline_icao": "EJA",
