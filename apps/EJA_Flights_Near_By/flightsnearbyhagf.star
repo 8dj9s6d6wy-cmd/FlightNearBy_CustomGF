@@ -2353,8 +2353,8 @@ def skip_execution():
 
 def filter_flight(flight):
     # default filter - only show US registrations that end with QS
-    reg = flight.get("aircraft_registration") or ""
-    return reg.startswith("N") and reg.endswith("QS")
+    eja = flight.get("flight_number") or ""
+    return eja.startswith("EJA") or eja.startswith("EJM")
 
 def debug_print(message, data = None):
     """Print debug messages when DEBUG_ENABLED is True"""
@@ -2372,8 +2372,8 @@ def main(config):
     ha_server = config.get("homeassistant_server")  #Don't forget to include a port at the end of the URL if using one
     entity_id = config.get("homeassistant_entity_id")  #The FlightRadar24 Integration sensor, default is 'sensor.flightradar24_current_in_area'
     token = config.get("homeassistant_token")  #Your long lived access token
-    show_all_aircraft = config.bool("show_all_aircraft")
-    show_dummy_info = config.bool("show_dummy_info")
+    #show_all_aircraft = config.bool("show_all_aircraft", False)
+    show_dummy_info = config.bool("show_dummy_info", False)
     DEBUG_ENABLED = config.bool("debug_mode", False)
 
     airhex_url2 = config.get("airhex_tail_direction", "_30_30_f.png")
@@ -2393,11 +2393,11 @@ def main(config):
         # Dummy data for preview
         sorted_matches = [{
             "airline_icao": "EJA",
-            "altitude": 35000,
+            "altitude": 5500,
             "flight_number": "EJA Demo Data",
             "callsign": "EJA FAKE",
-            "airport_origin_code_iata": "CMH",
-            "airport_destination_code_iata": "OSU",
+            "airport_origin_code_icao": "KCMH",
+            "airport_destination_code_icao": "KOSU",
             "aircraft_code": "E55P",
             "heading": 270,
             "latitude": 39.9,
@@ -2452,10 +2452,10 @@ def main(config):
         lines.append(render.Text("%s" % sorted_matches[0]["callsign"]))
 
     # origin/destination row (only if either exists)
-    if (("airport_origin_code_iata" in sorted_matches[0] and sorted_matches[0]["airport_origin_code_iata"]) or
-        ("airport_destination_code_iata" in sorted_matches[0] and sorted_matches[0]["airport_destination_code_iata"])):
-        origin = sorted_matches[0].get("airport_origin_code_iata") or "?"
-        destination = sorted_matches[0].get("airport_destination_code_iata") or "?"
+    if (("airport_origin_code_icao" in sorted_matches[0] and sorted_matches[0]["airport_origin_code_icao"]) or
+        ("airport_destination_code_icao" in sorted_matches[0] and sorted_matches[0]["airport_destination_code_icao"])):
+        origin = sorted_matches[0].get("airport_origin_code_icao") or "?"
+        destination = sorted_matches[0].get("airport_destination_code_icao") or "?"
         line = render.Row(
             expanded = True,
             main_align = "between_evenly",
@@ -2548,13 +2548,13 @@ def get_schema():
                 default = airhex_logo_option[1].value,
                 options = airhex_logo_option,
             ),
-            schema.Toggle(
-                id = "show_all_aircraft",
-                name = "Show All Aircraft",
-                desc = "Show all aircraft, not just commercial ones",
-                icon = "plane",
-                default = False,
-            ),
+            #schema.Toggle(
+             #   id = "show_all_aircraft",
+              #  name = "Show All Aircraft",
+               # desc = "Show all aircraft, not just commercial ones",
+                #icon = "plane",
+                #default = False,
+            #),
             schema.Toggle(
                 id = "show_dummy_info",
                 name = "Show dummy info",
