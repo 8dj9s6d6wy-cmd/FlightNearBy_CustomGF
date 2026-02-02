@@ -57,8 +57,14 @@ for name, asset_1x in assets_1x:
 # Load DB from JSON file
 def load_aircraft_db():
     """Load aircraft database from JSON file."""
+    try:
         db_content = DB_JSON.readall()
-        return json.decode(db_content)
+        db = json.decode(db_content)
+        print(f"Loaded DB with {len(db)} entries")
+        return db
+    except Exception as e:
+        print(f"Error loading DB: {e}")
+        return {"E55P": {"desc": "L2J", "wtc": "M"}}  # Fallback
     
 
 DB = load_aircraft_db()
