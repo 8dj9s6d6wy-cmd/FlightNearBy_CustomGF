@@ -494,7 +494,7 @@ def main(config):
         home_lat = 39.8
         home_lon = -105.0
     else:
-        entity_status = get_entity_status(ha_server, entity_id, token, show_dummy_info = null)
+        entity_status = get_entity_status(ha_server, entity_id, token, show_dummy_info)
         extracted_attributes = entity_status["attributes"] if entity_status and "attributes" in entity_status else dict()
         flights = extracted_attributes["flights"] if "flights" in extracted_attributes else dict()
         matches_filters = [flight for flight in flights if filter_flight(flight)]
