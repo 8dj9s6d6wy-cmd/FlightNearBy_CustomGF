@@ -6,6 +6,6 @@ desc: Find the closest flight to your location. Using the FlightRadar24 Home Ass
 author: Ffeog187
 fileName: flightsnearbyhagf.star
 packageName: EJA_Flights_Near_By
-recommendedInterval: 5
+recommendedInterval: 1
 supports2x: true
 
