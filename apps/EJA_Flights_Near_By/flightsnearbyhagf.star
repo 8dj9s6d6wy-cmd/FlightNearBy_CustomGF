@@ -10879,7 +10879,7 @@ def main(config):
     ha_server = config.get("homeassistant_server")  #Don't forget to include a port at the end of the URL if using one
     entity_id = config.get("homeassistant_entity_id")  #The FlightRadar24 Integration sensor, default is 'sensor.flightradar24_current_in_area'
     token = config.get("homeassistant_token")  #Your long lived access token
-    #show_all_aircraft = config.bool("show_all_aircraft", False)
+    show_all_aircraft = config.bool("show_all_aircraft", False)
     show_dummy_info = config.bool("show_dummy_info", False)
     DEBUG_ENABLED = config.bool("debug_mode", False)
 
