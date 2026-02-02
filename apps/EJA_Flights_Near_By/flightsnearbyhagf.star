@@ -10963,14 +10963,14 @@ def main(config):
         origin = sorted_matches[0].get("airport_origin_code_icao") or "?"
         destination = sorted_matches[0].get("airport_destination_code_icao") or "?"
         line = render.Row(
-            expanded = True,
-            main_align = "between_evenly",
-            children = [
-                render.Text(origin),
-                render.Text("→", color = "#00a"),
-                render.Text(destination),
-            ],
-        )
+			    expanded = True,
+			    main_align = "space_between",  # Changed from "between_evenly"
+			    children = [
+		        render.Text(origin, font = "tom-thumb"),
+		        render.Text("→", color = "#00a", font = "tom-thumb"),
+		        render.Text(destination, font = "tom-thumb"),
+				    ],
+					)
         lines.append(line)
 
     if "aircraft_code" in sorted_matches[0] and sorted_matches[0]["aircraft_code"] != None and tiny_ico:
