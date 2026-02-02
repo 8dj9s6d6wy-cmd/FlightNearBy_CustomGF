@@ -59,12 +59,26 @@ def load_aircraft_db():
     """Load aircraft database from JSON file."""
     try:
         db_content = DB_JSON.readall()
-        db = json.decode(db_content)
-        print(f"Loaded DB with {len(db)} entries")
-        return db
+        
+        # Try to parse as pure JSON first
+        try:
+            return json.decode(db_content)
+        except:
+            # If that fails, try to strip "DB = " prefix
+            db_content = db_content.replace('DB = ', '')
+            # Remove trailing commas that break JSON parsing
+            db_content = db_content.replace(',\n}', '\n}')
+            db_content = db_content.replace(',\n    }', '\n    }')
+            return json.decode(db_content)
+            
     except Exception as e:
-        print(f"Error loading DB: {e}")
-        return {"E55P": {"desc": "L2J", "wtc": "M"}}  # Fallback
+        print(f"Error loading aircraft DB: {e}")
+        # Fallback with essential entries
+        return {
+            "E55P": {"desc": "L2J", "wtc": "M"},
+            "BE40": {"desc": "L2J", "wtc": "M"},
+            "C25A": {"desc": "L2J", "wtc": "L"}
+        }
     
 
 DB = load_aircraft_db()
