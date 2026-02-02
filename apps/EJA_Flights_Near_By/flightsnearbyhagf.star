@@ -392,17 +392,17 @@ def get_airplane_shape(flight):
     
     return SHAPES["unknown"]
 
-def get_entity_status(ha_server, entity_id, token, show_dummy_info):
+def get_entity_status(ha_server, entity_id, token, show_dummy_info=False):
     if ha_server == None:
-        #fail("Home Assistant server not configured")
+        print("Home Assistant server not configured")
         return None
-
+    
     if entity_id == None:
-        #fail("Entity ID not configured")
+        print("Entity ID not configured")
         return None
-
+    
     if token == None:
-        #fail("Bearer token not configured")
+        print("Bearer token not configured")
         return None
     if show_dummy_info == True:
         return None
