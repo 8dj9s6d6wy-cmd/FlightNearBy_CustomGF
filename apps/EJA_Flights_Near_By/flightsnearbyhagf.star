@@ -47,7 +47,7 @@ load("images/unknown.png", UNKNOWN_1X = "file")
 load("images/unknown@2x.png", UNKNOWN_2X = "file")
 # Load database from external file
 load("db.json", "DB_JSON")
-load("images/NJALogo.png", "NJA_TAIL = 'file'")
+load("images/NJALogo.png", NJA_TAIL = "file")
 
 # Create SHAPES dictionary manually (replace lines 38-42)
 SHAPES = {
@@ -68,12 +68,6 @@ SHAPES = {
     "twin_small": {"1x": TWIN_SMALL_1X, "2x": TWIN_SMALL_2X},
     "unknown": {"1x": UNKNOWN_1X, "2x": UNKNOWN_2X},
 }
-
-# Create SHAPES dict more efficiently
-SHAPES = {}
-for name, asset_1x in assets_1x:
-    asset_2x = next((a[1] for a in assets_2x if a[0] == name), None)
-    SHAPES[name] = {"1x": asset_1x, "2x": asset_2x}
 
 # Load DB from JSON file
 def load_aircraft_db():
@@ -389,7 +383,7 @@ def get_airplane_shape(flight, debug_enabled=False):
     if type_description:
         # Try type_description + wtc combination
         if wtc:
-            combined_key = f"{type_description}-{wtc}"
+            combined_key = "%s-%s" % (type_description, wtc)
             if combined_key in TYPE_DESCRIPTION_ICONS:
                 return SHAPES[TYPE_DESCRIPTION_ICONS[combined_key]]
         
