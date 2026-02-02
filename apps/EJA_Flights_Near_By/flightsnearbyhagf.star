@@ -10900,7 +10900,7 @@ def main(config):
         sorted_matches = [{
             "airline_icao": "EJA",
             "altitude": 5500,
-            "flight_number": "EJA Demo Data",
+            "flight_number": "EJAdemo",
             "callsign": "EJA FAKE",
             "airport_origin_code_icao": "KCMH",
             "airport_destination_code_icao": "KOSU",
@@ -10967,7 +10967,7 @@ def main(config):
 			    main_align = "space_between",  # Changed from "between_evenly"
 			    children = [
 		        render.Text(origin, font = "tom-thumb"),
-		        render.Text("→", color = "#00a", font = "tom-thumb"),
+		        render.Text("→", color = "#00a"),
 		        render.Text(destination, font = "tom-thumb"),
 				    ],
 					)
