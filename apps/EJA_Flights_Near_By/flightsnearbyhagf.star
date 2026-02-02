@@ -46,7 +46,6 @@ load("images/twin_small@2x.png", TWIN_SMALL_2X = "file")
 load("images/unknown.png", UNKNOWN_1X = "file")
 load("images/unknown@2x.png", UNKNOWN_2X = "file")
 # Load database from external file
-load("db.json", "DB_JSON")
 load("images/NJALogo.png", NJA_TAIL = "file")
 
 # Create SHAPES dictionary manually (replace lines 38-42)
