@@ -12,41 +12,62 @@ load("http.star", "http")
 load("math.star", "math")
 load("render.star", "canvas", "render")
 load("schema.star", "schema")
-
+# Static asset loading (add after line 6)
+load("images/airliner.png", AIRLINER_1X = "file")
+load("images/airliner@2x.png", AIRLINER_2X = "file")
+load("images/balloon.png", BALLOON_1X = "file")
+load("images/balloon@2x.png", BALLOON_2X = "file")
+load("images/cessna.png", CESSNA_1X = "file")
+load("images/cessna@2x.png", CESSNA_2X = "file")
+load("images/ground_emergency.png", GROUND_EMERGENCY_1X = "file")
+load("images/ground_emergency@2x.png", GROUND_EMERGENCY_2X = "file")
+load("images/ground_fixed.png", GROUND_FIXED_1X = "file")
+load("images/ground_fixed@2x.png", GROUND_FIXED_2X = "file")
+load("images/ground_service.png", GROUND_SERVICE_1X = "file")
+load("images/ground_service@2x.png", GROUND_SERVICE_2X = "file")
+load("images/ground_unknown.png", GROUND_UNKNOWN_1X = "file")
+load("images/ground_unknown@2x.png", GROUND_UNKNOWN_2X = "file")
+load("images/heavy_2e.png", HEAVY_2E_1X = "file")
+load("images/heavy_2e@2x.png", HEAVY_2E_2X = "file")
+load("images/heavy_4e.png", HEAVY_4E_1X = "file")
+load("images/heavy_4e@2x.png", HEAVY_4E_2X = "file")
+load("images/helicopter.png", HELICOPTER_1X = "file")
+load("images/helicopter@2x.png", HELICOPTER_2X = "file")
+load("images/hi_perf.png", HI_PERF_1X = "file")
+load("images/hi_perf@2x.png", HI_PERF_2X = "file")
+load("images/jet_nonswept.png", JET_NONSWEPT_1X = "file")
+load("images/jet_nonswept@2x.png", JET_NONSWEPT_2X = "file")
+load("images/jet_swept.png", JET_SWEPT_1X = "file")
+load("images/jet_swept@2x.png", JET_SWEPT_2X = "file")
+load("images/twin_large.png", TWIN_LARGE_1X = "file")
+load("images/twin_large@2x.png", TWIN_LARGE_2X = "file")
+load("images/twin_small.png", TWIN_SMALL_1X = "file")
+load("images/twin_small@2x.png", TWIN_SMALL_2X = "file")
+load("images/unknown.png", UNKNOWN_1X = "file")
+load("images/unknown@2x.png", UNKNOWN_2X = "file")
 # Load database from external file
-load("db.json", "DB_JSON = 'file'")
-
-# Asset loading optimization
-ASSET_CONFIGS = [
-    ("airliner", "images/airliner.png", "AIRLINER_ASSET"),
-    ("balloon", "images/balloon.png", "BALLOON_ASSET"), 
-    ("cessna", "images/cessna.png", "CESSNA_ASSET"),
-    ("ground_emergency", "images/ground_emergency.png", "GROUND_EMERGENCY_ASSET"),
-    ("ground_fixed", "images/ground_fixed.png", "GROUND_FIXED_ASSET"),
-    ("ground_service", "images/ground_service.png", "GROUND_SERVICE_ASSET"),
-    ("ground_unknown", "images/ground_unknown.png", "GROUND_UNKNOWN_ASSET"),
-    ("heavy_2e", "images/heavy_2e.png", "HEAVY_2E_ASSET"),
-    ("heavy_4e", "images/heavy_4e.png", "HEAVY_4E_ASSET"),
-    ("helicopter", "images/helicopter.png", "HELICOPTER_ASSET"),
-    ("hi_perf", "images/hi_perf.png", "HI_PERF_ASSET"),
-    ("jet_nonswept", "images/jet_nonswept.png", "JET_NONSWEPT_ASSET"),
-    ("jet_swept", "images/jet_swept.png", "JET_SWEPT_ASSET"),
-    ("twin_large", "images/twin_large.png", "TWIN_LARGE_ASSET"),
-    ("twin_small", "images/twin_small.png", "TWIN_SMALL_ASSET"),
-    ("unknown", "images/unknown.png", "UNKNOWN_ASSET"),
-]
-
-# Load all assets dynamically
-assets_1x = []
-assets_2x = []
-for name, path_1x, var_name in ASSET_CONFIGS:
-    path_2x = path_1x.replace(".png", "@2x.png")
-    load(path_1x, var_name + "_1X = 'file'")
-    load(path_2x, var_name + "_2X = 'file'")
-    assets_1x.append((name, globals()[var_name + "_1X"]))
-    assets_2x.append((name, globals()[var_name + "_2X"]))
-
+load("db.json", "DB_JSON")
 load("images/NJALogo.png", "NJA_TAIL = 'file'")
+
+# Create SHAPES dictionary manually (replace lines 38-42)
+SHAPES = {
+    "airliner": {"1x": AIRLINER_1X, "2x": AIRLINER_2X},
+    "balloon": {"1x": BALLOON_1X, "2x": BALLOON_2X},
+    "cessna": {"1x": CESSNA_1X, "2x": CESSNA_2X},
+    "ground_emergency": {"1x": GROUND_EMERGENCY_1X, "2x": GROUND_EMERGENCY_2X},
+    "ground_fixed": {"1x": GROUND_FIXED_1X, "2x": GROUND_FIXED_2X},
+    "ground_service": {"1x": GROUND_SERVICE_1X, "2x": GROUND_SERVICE_2X},
+    "ground_unknown": {"1x": GROUND_UNKNOWN_1X, "2x": GROUND_UNKNOWN_2X},
+    "heavy_2e": {"1x": HEAVY_2E_1X, "2x": HEAVY_2E_2X},
+    "heavy_4e": {"1x": HEAVY_4E_1X, "2x": HEAVY_4E_2X},
+    "helicopter": {"1x": HELICOPTER_1X, "2x": HELICOPTER_2X},
+    "hi_perf": {"1x": HI_PERF_1X, "2x": HI_PERF_2X},
+    "jet_nonswept": {"1x": JET_NONSWEPT_1X, "2x": JET_NONSWEPT_2X},
+    "jet_swept": {"1x": JET_SWEPT_1X, "2x": JET_SWEPT_2X},
+    "twin_large": {"1x": TWIN_LARGE_1X, "2x": TWIN_LARGE_2X},
+    "twin_small": {"1x": TWIN_SMALL_1X, "2x": TWIN_SMALL_2X},
+    "unknown": {"1x": UNKNOWN_1X, "2x": UNKNOWN_2X},
+}
 
 # Create SHAPES dict more efficiently
 SHAPES = {}
@@ -59,17 +80,8 @@ def load_aircraft_db():
     """Load aircraft database from JSON file."""
     try:
         db_content = DB_JSON.readall()
-        
-        # Try to parse as pure JSON first
-        try:
-            return json.decode(db_content)
-        except:
-            # If that fails, try to strip "DB = " prefix
-            db_content = db_content.replace('DB = ', '')
-            # Remove trailing commas that break JSON parsing
-            db_content = db_content.replace(',\n}', '\n}')
-            db_content = db_content.replace(',\n    }', '\n    }')
-            return json.decode(db_content)
+        return json.decode(db_content)
+       
             
     except Exception as e:
         print(f"Error loading aircraft DB: {e}")
@@ -358,9 +370,9 @@ CATEGORY_ICONS = {
     "C7": "ground_unknown",
 }
 
-def get_airplane_shape(flight):
+def get_airplane_shape(flight, debug_enabled=False):
     """Determine the appropriate airplane icon shape for a flight."""
-    debug_print("Processing flight:", flight.get("flight_number", "Unknown"))
+    debug_print("Processing flight:", flight.get("flight_number", "Unknown"), debug_enabled)
     
     type_designator = flight.get("aircraft_code")
     if not type_designator:
@@ -440,9 +452,9 @@ def filter_flight(flight):
     eja = flight.get("flight_number") or ""
     return eja.startswith("EJA") or eja.startswith("EJM")
 
-def debug_print(message, data = None):
-    """Print debug messages when DEBUG_ENABLED is True"""
-    if DEBUG_ENABLED:
+def debug_print(message, data=None, debug_enabled=False):
+    """Print debug messages when debug_enabled is True"""
+    if debug_enabled:
         if data != None:
             print("[DEBUG] %s: %s" % (message, data))
         else:
@@ -522,7 +534,7 @@ def main(config):
             airplane_shape = get_airplane_shape(sorted_matches[0])
             media_image = airplane_shape["2x"].readall() if canvas.is2x() else airplane_shape["1x"].readall()
 
-    airplane_shape = get_airplane_shape(sorted_matches[0])
+    airplane_shape = get_airplane_shape(sorted_matches[0], DEBUG_ENABLED)
 
     # Always set tiny_ico
     tiny_ico = airplane_shape["2x"].readall() if canvas.is2x() else airplane_shape["1x"].readall()
