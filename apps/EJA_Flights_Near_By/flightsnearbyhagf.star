@@ -10967,7 +10967,7 @@ def main(config):
 			    main_align = "space_between",  # Changed from "between_evenly"
 			    children = [
 		        render.Text(origin, font = "tom-thumb"),
-		        render.Text("→", color = "#CC785C"),
+		        render.Text("→", color = "#CC785C", font = "tom-thumb"),
 		        render.Text(destination, font = "tom-thumb"),
 				    ],
 					)
