@@ -10953,9 +10953,9 @@ def main(config):
 
     #make a list of lines we'd prefer to have in order, we'll display the top 3 of them.
     if "flight_number" in sorted_matches[0] and sorted_matches[0]["flight_number"]:
-        lines.append(render.Text("%s" % sorted_matches[0]["flight_number"]))
+        lines.append(render.Text("%s" % sorted_matches[0]["flight_number"], font = "tom-thumb"))
     elif "callsign" in sorted_matches[0] and sorted_matches[0]["callsign"]:
-        lines.append(render.Text("%s" % sorted_matches[0]["callsign"]))
+        lines.append(render.Text("%s" % sorted_matches[0]["callsign"], font = "tom-thumb"))
 
     # origin/destination row (only if either exists)
     if (("airport_origin_code_icao" in sorted_matches[0] and sorted_matches[0]["airport_origin_code_icao"]) or
@@ -10967,7 +10967,7 @@ def main(config):
 			    main_align = "space_between",  # Changed from "between_evenly"
 			    children = [
 		        render.Text(origin, font = "tom-thumb"),
-		        render.Text("→", color = "#CC785C", font = "tom-thumb"),
+		        render.Text("→", color = "#CC785C"),
 		        render.Text(destination, font = "tom-thumb"),
 				    ],
 					)
@@ -10984,12 +10984,12 @@ def main(config):
                         angle = 0,
                     ),
                 ),
-                render.Text(" %s" % sorted_matches[0]["aircraft_code"]),
+                render.Text(" %s" % sorted_matches[0]["aircraft_code"], font = "tom-thumb"),
             ],
         )
         lines.append(line)
     elif "aircraft_code" in sorted_matches[0] and sorted_matches[0]["aircraft_code"] != None:
-        line = render.Text("%s" % sorted_matches[0]["aircraft_code"])
+        line = render.Text("%s" % sorted_matches[0]["aircraft_code"], font = "tom-thumb")
         lines.append(line)
 
     display = render.Row(
