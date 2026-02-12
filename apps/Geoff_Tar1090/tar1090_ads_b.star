@@ -615,16 +615,26 @@ def main(config):
     )
 
     frame2.append(
-    render.Row(
-        children = [
-            render.Image(src = aircraft_icon, height = 18),
-            render.Box(
-                height = 18,
-                padding = 1,
-                child = render.Text(content = "Tail: %s" % aircraft_data[0].upper(),font = "tom-thumb"),
-            ),
-        ],
-        expanded = True,
+        render.Row(
+            children = [
+                render.Image(src = aircraft_icon, height = 18),
+                render.Box(
+                    height = 18,
+                    child = render.Column(
+                        children = [
+                            render.Text(content = "Reg: %s" % aircraft_data[0].upper()),
+                            render.Box(height = 2),  # Small spacer
+                            render.WrappedText(
+                                content = aircraft_data[3] if aircraft_data[3] != None else "No Description",
+                                font = "tom-thumb",
+                                align = "left",
+                            ),
+                        ],
+                        cross_align = "start",
+                    ),
+                ),
+            ],
+            expanded = True,
         ),
     )
 
