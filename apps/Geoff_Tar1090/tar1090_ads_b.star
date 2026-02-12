@@ -491,43 +491,27 @@ def main(config):
     if "flight" in aircraft and aircraft["flight"]:
         airline_code = aircraft["flight"].strip()[:3].upper()
 
-    # Debug output
-    print("=== AIRLINE LOGO DEBUG ===")
-    print("Full callsign:", aircraft.get("flight", "None"))
-    print("Extracted airline_code:", airline_code)
-
     # First check if it's NetJets
     if airline_code in ["EJA", "EJM"]:
-        print("NetJets detected - using NJA_TAIL")
         media_image = NJA_TAIL.readall()
     elif airline_code:
         # Try to get airline logo using first 3 characters of callsign
-        logo_url = "%s%s%s" % (AIRHEX_URL_BASE, airline_code, AIRHEX_URL_SUFFIX)
-        print("Trying airline logo URL:", logo_url)
-        res = http.get(logo_url, ttl_seconds = 86400)
-        print("Response status code:", res.status_code)
-        
+        res = http.get("%s%s%s" % (AIRHEX_URL_BASE, airline_code, AIRHEX_URL_SUFFIX), ttl_seconds = 86400)
         if res.status_code == 200:
-            print("Success - using airline logo")
             media_image = res.body()
         else:
             # Fallback to country flag if airline logo fails
-            print("Failed - falling back to country flag")
             media_image = find_flag(aircraft["hex"])
     else:
         # Use country flag as fallback for missing callsign
-        print("No callsign - using country flag")
         media_image = find_flag(aircraft["hex"])
-    print("===========================")
     
-
-
     # Print each index individually if it's a list/array
     if aircraft_data:
         for i in range(len(aircraft_data)):
             print("aircraft_data[%d]:" % i, aircraft_data[i])
-    print("===========================")
-    
+        print("===========================")
+   
     if aircraft_data == None:
         return unable_to_reach_tar_error(tar_url)
 
