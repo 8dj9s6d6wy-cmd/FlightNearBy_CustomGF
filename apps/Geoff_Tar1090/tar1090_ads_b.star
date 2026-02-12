@@ -623,7 +623,7 @@ def main(config):
                     padding = 1,
                     child = render.Column(
                         children = [
-                            render.Text(content = "ICAO HEX", font = "CG-pixel-4x5-mono"),
+                            render.Text(content = "ICAO HEX", font = "tom-thumb"),
                             render.Text(content = aircraft["hex"].upper()),
                         ],
                         cross_align = "center",
@@ -646,7 +646,7 @@ def main(config):
                 render.Box(
                     child = render.WrappedText(
                         content = aircraft_long_name,
-                        height = 12,
+                        height = 6,
                         align = "center",
                         font = "tom-thumb",
                     ),
