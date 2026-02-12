@@ -484,19 +484,24 @@ def main(config):
     # Get airline logo or fallback to flag
     media_image = None
 
+    # Extract airline code from callsign (first 3 characters)
+    airline_code = None
+    if "flight" in aircraft and aircraft["flight"]:
+        airline_code = aircraft["flight"].strip()[:3].upper()
+
     # First check if it's NetJets
-    if aircraft.get("airline_icao") == 'EJA':
+    if airline_code in ["EJA", "EJM"]:
         media_image = NJA_TAIL.readall()
-    elif "airline_icao" in aircraft and aircraft["airline_icao"]:
-        # Try to get airline logo
-        res = http.get("%s%s%s" % (AIRHEX_URL_BASE, aircraft["airline_icao"], AIRHEX_URL_SUFFIX), ttl_seconds = 86400)
+    elif airline_code:
+        # Try to get airline logo using first 3 characters of callsign
+        res = http.get("%s%s%s" % (AIRHEX_URL_BASE, airline_code, AIRHEX_URL_SUFFIX), ttl_seconds = 86400)
         if res.status_code == 200:
             media_image = res.body()
         else:
             # Fallback to country flag if airline logo fails
             media_image = find_flag(aircraft["hex"])
     else:
-        # Use country flag as fallback for non-commercial or missing airline
+        # Use country flag as fallback for missing callsign
         media_image = find_flag(aircraft["hex"])
 
     # This is the first "version dependant" call
