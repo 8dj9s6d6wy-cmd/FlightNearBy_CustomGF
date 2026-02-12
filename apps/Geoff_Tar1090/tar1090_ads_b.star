@@ -623,8 +623,8 @@ def main(config):
                     padding = 1,
                     child = render.Column(
                         children = [
-                            render.Text(content = "Tail #", font = "tom-thumb"),
-                            render.Text(content = aircraft_data[0].upper(),font = "tom-thumb"),
+                            render.Text(content = "Tail #"),
+                            render.Text(content = aircraft_data[0].upper()),
                         ],
                         cross_align = "center",
                     ),
