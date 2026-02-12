@@ -629,7 +629,7 @@ def main(config):
                     height = 32,
                     child = render.Column(
                         children = [
-                            render.Text(content = "Reg: %s" % (aircraft_data[0].upper() if aircraft_data[0] else "N/A")),
+                            render.Text(content = (aircraft_data[0].upper() if aircraft_data[0] else "N/A")),
                             render.WrappedText(
                                 content = aircraft_data[3] if aircraft_data[3] != None else "No Description",
                                 font = "tom-thumb",
