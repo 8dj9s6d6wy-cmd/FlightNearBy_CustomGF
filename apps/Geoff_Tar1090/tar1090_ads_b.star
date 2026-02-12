@@ -491,37 +491,37 @@ def main(config):
     if "flight" in aircraft and aircraft["flight"]:
         airline_code = aircraft["flight"].strip()[:3].upper()
 
+    # Debug output
+    print("=== AIRLINE LOGO DEBUG ===")
+    print("Full callsign:", aircraft.get("flight", "None"))
+    print("Extracted airline_code:", airline_code)
+
     # First check if it's NetJets
     if airline_code in ["EJA", "EJM"]:
+        print("NetJets detected - using NJA_TAIL")
         media_image = NJA_TAIL.readall()
     elif airline_code:
         # Try to get airline logo using first 3 characters of callsign
-        res = http.get("%s%s%s" % (AIRHEX_URL_BASE, airline_code, AIRHEX_URL_SUFFIX), ttl_seconds = 86400)
+        logo_url = "%s%s%s" % (AIRHEX_URL_BASE, airline_code, AIRHEX_URL_SUFFIX)
+        print("Trying airline logo URL:", logo_url)
+        res = http.get(logo_url, ttl_seconds = 86400)
+        print("Response status code:", res.status_code)
+        
         if res.status_code == 200:
+            print("Success - using airline logo")
             media_image = res.body()
         else:
             # Fallback to country flag if airline logo fails
+            print("Failed - falling back to country flag")
             media_image = find_flag(aircraft["hex"])
     else:
         # Use country flag as fallback for missing callsign
+        print("No callsign - using country flag")
         media_image = find_flag(aircraft["hex"])
-
-    # This is the first "version dependant" call
-    aircraft_data = lookup_db(tar_url, aircraft["hex"], 1, db_version)
-    if aircraft_data == None:
-        return unable_to_reach_tar_error(tar_url)
-
+    print("===========================")
     
-     # ADD DEBUG OUTPUT HERE
-    print("=== AIRCRAFT_DATA DEBUG ===")
-    print("ICAO Hex:", aircraft["hex"])
-    print("Database Version:", db_version)
-    print("Base URL:", tar_url)
-    print("Full URL (first level):", "%s/db-%s/%s.js" % (tar_url, db_version, aircraft["hex"].upper()[0:1]))
-    print("Type of aircraft_data:", type(aircraft_data))
-    print("Length of aircraft_data:", len(aircraft_data) if aircraft_data else "None")
-    print("Full aircraft_data:", aircraft_data)
-    
+
+
     # Print each index individually if it's a list/array
     if aircraft_data:
         for i in range(len(aircraft_data)):
