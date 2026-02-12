@@ -631,7 +631,7 @@ def main(config):
                         children = [
                             render.Text(
                                 content = aircraft_data[0].upper() if aircraft_data[0] else "N/A",
-                                font = "tom-thumb",
+                                #font = "tom-thumb",
                             ),
                             render.WrappedText(
                                 content = aircraft_data[3] if aircraft_data[3] != None else "No Description",
