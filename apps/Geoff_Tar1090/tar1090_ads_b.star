@@ -370,14 +370,6 @@ def get_callsign(aircraft):
 def get_aircraft_icon(category, designator, description, addrtype, color):
     aircraft_icon_response = http.get("https://tar1090tidbyt.azurewebsites.net/api/aircraft_icon?category=%s&typeDesignator=%s&typeDescription=%s&addrtype=%s&color=%s" % (category, designator, description, addrtype, color), ttl_seconds = 86400)
     
-    # Debug output
-    print("=== Aircraft Icon API Response ===")
-    print("Status Code:", aircraft_icon_response.status_code)
-    print("Headers:", aircraft_icon_response.headers)
-    print("Body Type:", type(aircraft_icon_response.body()))
-    print("Body Length:", len(aircraft_icon_response.body()))
-    print("==================================")
-    
     if aircraft_icon_response.status_code != 200:
         fail("tar1090 request failed with status %d" % (aircraft_icon_response.status_code))
     
@@ -519,9 +511,13 @@ def main(config):
     if aircraft_data == None:
         return unable_to_reach_tar_error(tar_url)
 
-        # ADD DEBUG OUTPUT HERE
+    
+     # ADD DEBUG OUTPUT HERE
     print("=== AIRCRAFT_DATA DEBUG ===")
     print("ICAO Hex:", aircraft["hex"])
+    print("Database Version:", db_version)
+    print("Base URL:", tar_url)
+    print("Full URL (first level):", "%s/db-%s/%s.js" % (tar_url, db_version, aircraft["hex"].upper()[0:1]))
     print("Type of aircraft_data:", type(aircraft_data))
     print("Length of aircraft_data:", len(aircraft_data) if aircraft_data else "None")
     print("Full aircraft_data:", aircraft_data)
