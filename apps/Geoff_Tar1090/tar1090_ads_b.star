@@ -529,7 +529,7 @@ def main(config):
     frame1.append(
         render.Row(
             children = [
-                render.Image(src = media_image),
+                render.Image(src = media_image, width = 30, height = 30),
                 render.Box(
                     height = 12,
                     width = 45,
