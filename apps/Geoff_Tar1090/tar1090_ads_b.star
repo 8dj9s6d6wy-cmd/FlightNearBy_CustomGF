@@ -623,14 +623,14 @@ def main(config):
                     width = 46,  # Remaining space (64 - 18 for icon = 46)
                     child = render.Column(
                         children = [
-                            render.Text(content = "Reg: %s" % aircraft_data[0].upper()),
+                            render.Text(content =aircraft_data[0].upper()),
                             render.WrappedText(
                                 content = aircraft_data[3] if aircraft_data[3] != None else "No Description",
                                 font = "tom-thumb",
                                 width = 46,  # Must specify width for wrapping
                             ),
                         ],
-                        cross_align = "start",
+                        cross_align = "center",
                     ),
                 ),
             ],
