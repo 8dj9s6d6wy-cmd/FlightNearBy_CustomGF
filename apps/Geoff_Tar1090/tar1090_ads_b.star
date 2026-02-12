@@ -638,40 +638,6 @@ def main(config):
         ),
     )
 
-    aircraft_name = ""
-    if aircraft_data[3] != None:
-        aircraft_name = aircraft_data[3]
-    else:
-        aircraft_name = "No Type"
-
-    frame2.append(
-        render.Row(
-            children = [
-                render.Box(
-                    child = render.WrappedText(
-                        content = aircraft_name,
-                        height = 12,
-                        align = "center",
-                        font = "tom-thumb",
-                    ),
-                ),
-            ],
-        ),
-    )
-
-    animation_frames.append(
-        render.Column(
-            children = frame1,
-            cross_align = "center",
-        ),
-    )
-    animation_frames.append(
-        render.Column(
-            children = frame2,
-            cross_align = "center",
-        ),
-    )
-
     return render.Root(
         delay = 5000,
         child = render.Animation(children = animation_frames),
