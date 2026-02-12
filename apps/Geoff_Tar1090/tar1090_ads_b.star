@@ -617,22 +617,16 @@ def main(config):
     frame2.append(
     render.Row(
         children = [
-            render.Image(src = aircraft_icon, height = 18),  # Changed from 12 to 18
+            render.Image(src = aircraft_icon, height = 18),
             render.Box(
-                height = 18,  # Changed from 12 to 18 to match image
+                height = 18,
                 padding = 1,
-                child = render.Column(
-                    children = [
-                        render.Text(content = "Tail #", font = "CG-pixel-4x5-mono"),  # Added font for consistency
-                        render.Text(content = aircraft_data[0].upper()),
-                    ],
-                    cross_align = "center",
-                ),
+                child = render.Text(content = "Tail: %s" % aircraft_data[0].upper()),
             ),
         ],
         expanded = True,
-    ),
-)
+        ),
+    )
 
     aircraft_short_code = ""
     if aircraft_data[1] != None:
@@ -646,7 +640,7 @@ def main(config):
                 render.Box(
                     child = render.WrappedText(
                         content = aircraft_short_code,
-                        height = 12,  # Changed from 6 to 12 for better readability
+                        height = 12,
                         align = "center",
                         font = "tom-thumb",
                     ),
