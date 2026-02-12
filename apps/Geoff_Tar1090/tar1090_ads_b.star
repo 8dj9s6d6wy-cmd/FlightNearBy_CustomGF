@@ -635,8 +635,8 @@ def main(config):
     )
 
     aircraft_long_name = ""
-    if aircraft_data[3] != None:
-        aircraft_long_name = aircraft_data[3]
+    if aircraft_data[1] != None:
+        aircraft_long_name = aircraft_data[1]
     else:
         aircraft_long_name = "No Description"
 
