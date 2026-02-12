@@ -16,7 +16,7 @@ load("images/NJALogo.png", NJA_TAIL = "file")
 
 ERROR_ICON = ERROR_ASSET.readall()
 
-TAR1090_URL_DEFAULT = "SET YOUR URL"
+TAR1090_URL_DEFAULT = "http://24.214.163.219:80/tar1090/"
 
 # Use aeronautical units by default
 DEFAULT_CONVERSION_UNITS = "a"
