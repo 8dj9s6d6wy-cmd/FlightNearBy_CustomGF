@@ -557,7 +557,7 @@ def main(config):
                     width = 45,
                     child = render.Column(
                         children = [
-                            render.Text(content = "CALLSIGN", font = "CG-pixel-4x5-mono"),
+                            render.Text(content = "Flight", font = "CG-pixel-4x5-mono"),
                             render.Text(content = get_callsign(aircraft).strip().upper()),
                         ],
                         cross_align = "center",
@@ -621,18 +621,18 @@ def main(config):
             render.Box(
                 height = 18,
                 padding = 1,
-                child = render.Text(content = "Tail: %s" % aircraft_data[0].upper()),
+                child = render.Text(content = "Tail: %s" % aircraft_data[0].upper(),font = "tom-thumb"),
             ),
         ],
         expanded = True,
         ),
     )
 
-    aircraft_short_code = ""
-    if aircraft_data[1] != None:
-        aircraft_short_code = aircraft_data[1]
+    aircraft_name = ""
+    if aircraft_data[3] != None:
+        aircraft_name = aircraft_data[3]
     else:
-        aircraft_short_code = "No Type"
+        aircraft_name = "No Type"
 
     frame2.append(
         render.Row(
