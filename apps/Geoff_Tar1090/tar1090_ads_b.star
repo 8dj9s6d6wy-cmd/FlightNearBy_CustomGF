@@ -623,8 +623,8 @@ def main(config):
                     padding = 1,
                     child = render.Column(
                         children = [
-                            render.Text(content = "ICAO HEX", font = "tom-thumb"),
-                            render.Text(content = aircraft["hex"].upper()),
+                            render.Text(content = "REG", font = "tom-thumb"),
+                            render.Text(content = aircraft_data[0].upper()),
                         ],
                         cross_align = "center",
                     ),
