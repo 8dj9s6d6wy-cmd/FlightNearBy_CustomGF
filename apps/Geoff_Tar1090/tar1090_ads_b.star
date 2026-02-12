@@ -638,6 +638,18 @@ def main(config):
         ),
     )
 
+    animation_frames.append(
+        render.Column(
+        children = frame1,
+        cross_align = "center",
+        ),
+    )
+    animation_frames.append(
+        render.Column(
+        children = frame2,
+        cross_align = "center",
+        ),
+    )
     return render.Root(
         delay = 5000,
         child = render.Animation(children = animation_frames),
