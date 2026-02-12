@@ -505,15 +505,18 @@ def main(config):
     else:
         # Use country flag as fallback for missing callsign
         media_image = find_flag(aircraft["hex"])
-    
-    # Print each index individually if it's a list/array
+
+    # THIS MUST COME BEFORE THE DEBUG PRINT!
+    aircraft_data = lookup_db(tar_url, aircraft["hex"], 1, db_version)
+    if aircraft_data == None:
+        return unable_to_reach_tar_error(tar_url)
+
+    # NOW you can debug print aircraft_data
+    print("=== AIRCRAFT_DATA DEBUG ===")
     if aircraft_data:
         for i in range(len(aircraft_data)):
             print("aircraft_data[%d]:" % i, aircraft_data[i])
-        print("===========================")
-   
-    if aircraft_data == None:
-        return unable_to_reach_tar_error(tar_url)
+    print("===========================")
 
     aircraft_desc = lookup_aircraft_desc(tar_url, aircraft_data, db_version)
     if aircraft_desc == None:
