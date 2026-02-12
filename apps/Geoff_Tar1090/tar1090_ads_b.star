@@ -617,17 +617,17 @@ def main(config):
     frame2.append(
         render.Row(
             children = [
-                render.Image(src = aircraft_icon, height = 18),
+                render.Image(src = aircraft_icon, height = 18, width = 18),
                 render.Box(
                     height = 18,
+                    width = 46,  # Remaining space (64 - 18 for icon = 46)
                     child = render.Column(
                         children = [
                             render.Text(content = "Reg: %s" % aircraft_data[0].upper()),
-                            render.Box(height = 2),  # Small spacer
                             render.WrappedText(
                                 content = aircraft_data[3] if aircraft_data[3] != None else "No Description",
                                 font = "tom-thumb",
-                                align = "left",
+                                width = 46,  # Must specify width for wrapping
                             ),
                         ],
                         cross_align = "start",
