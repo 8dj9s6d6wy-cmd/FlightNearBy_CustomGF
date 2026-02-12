@@ -369,9 +369,23 @@ def get_callsign(aircraft):
 # to a PNG icon that the color is alt based
 def get_aircraft_icon(category, designator, description, addrtype, color):
     aircraft_icon_response = http.get("https://tar1090tidbyt.azurewebsites.net/api/aircraft_icon?category=%s&typeDesignator=%s&typeDescription=%s&addrtype=%s&color=%s" % (category, designator, description, addrtype, color), ttl_seconds = 86400)
+    
+    # Print the response status and headers
+    print("Status Code:", aircraft_icon_response.status_code)
+    print("Headers:", aircraft_icon_response.headers)
+    
+    # Print the content type to see if it's an image or JSON
+    if "content-type" in aircraft_icon_response.headers:
+        print("Content-Type:", aircraft_icon_response.headers["content-type"])
+    
     if aircraft_icon_response.status_code != 200:
         fail("tar1090 request failed with status %d" % (aircraft_icon_response.status_code))
+    
     aircraft_icon = aircraft_icon_response.body()
+    
+    # Print body length (if it's an image, this will show bytes)
+    print("Body length:", len(aircraft_icon))
+    
     return aircraft_icon
 
 # Determine the color of the icon based on altitude of the aircraft
@@ -595,9 +609,9 @@ def main(config):
     frame2.append(
         render.Row(
             children = [
-                render.Image(src = aircraft_icon, height = 18),
+                render.Image(src = aircraft_icon, height = 9),
                 render.Box(
-                    height = 18,
+                    height = 9,
                     padding = 1,
                     child = render.Column(
                         children = [
