@@ -457,7 +457,7 @@ def validate_url(url):
         return False
 
 def main(config):
-    tar_url = config.str("http://24.214.163.219:80/tar1090", TAR1090_URL_DEFAULT)
+    tar_url = config.str("tar1090url", TAR1090_URL_DEFAULT)
 
     if tar_url == TAR1090_URL_DEFAULT:
         return unable_to_reach_tar_error(tar_url)
