@@ -519,6 +519,22 @@ def main(config):
     if aircraft_data == None:
         return unable_to_reach_tar_error(tar_url)
 
+        # ADD DEBUG OUTPUT HERE
+    print("=== AIRCRAFT_DATA DEBUG ===")
+    print("ICAO Hex:", aircraft["hex"])
+    print("Type of aircraft_data:", type(aircraft_data))
+    print("Length of aircraft_data:", len(aircraft_data) if aircraft_data else "None")
+    print("Full aircraft_data:", aircraft_data)
+    
+    # Print each index individually if it's a list/array
+    if aircraft_data:
+        for i in range(len(aircraft_data)):
+            print("aircraft_data[%d]:" % i, aircraft_data[i])
+    print("===========================")
+    
+    if aircraft_data == None:
+        return unable_to_reach_tar_error(tar_url)
+
     aircraft_desc = lookup_aircraft_desc(tar_url, aircraft_data, db_version)
     if aircraft_desc == None:
         return unable_to_reach_tar_error(tar_url)
