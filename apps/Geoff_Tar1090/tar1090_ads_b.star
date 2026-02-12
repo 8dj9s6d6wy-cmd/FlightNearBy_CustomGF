@@ -16,7 +16,7 @@ load("images/NJALogo.png", NJA_TAIL = "file")
 
 ERROR_ICON = ERROR_ASSET.readall()
 
-TAR1090_URL_DEFAULT = "http://24.214.163.219:80/tar1090/"
+TAR1090_URL_DEFAULT = "SET YOUR URL"
 
 # Use aeronautical units by default
 DEFAULT_CONVERSION_UNITS = "a"
@@ -457,7 +457,7 @@ def validate_url(url):
         return False
 
 def main(config):
-    tar_url = config.str("tar1090url", TAR1090_URL_DEFAULT)
+    tar_url = config.str("http://24.214.163.219:80/tar1090/", TAR1090_URL_DEFAULT)
 
     if tar_url == TAR1090_URL_DEFAULT:
         return unable_to_reach_tar_error(tar_url)
