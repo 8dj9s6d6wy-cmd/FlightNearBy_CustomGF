@@ -639,7 +639,7 @@ def main(config):
             children = [
                 render.Box(
                     child = render.WrappedText(
-                        content = aircraft_short_code,
+                        content = aircraft_name,
                         height = 12,
                         align = "center",
                         font = "tom-thumb",
