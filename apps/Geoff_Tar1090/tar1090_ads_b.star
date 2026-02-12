@@ -615,38 +615,38 @@ def main(config):
     )
 
     frame2.append(
-        render.Row(
-            children = [
-                render.Image(src = aircraft_icon, height = 12),
-                render.Box(
-                    height = 12,
-                    padding = 1,
-                    child = render.Column(
-                        children = [
-                            render.Text(content = "Tail #"),
-                            render.Text(content = aircraft_data[0].upper()),
-                        ],
-                        cross_align = "center",
-                    ),
+    render.Row(
+        children = [
+            render.Image(src = aircraft_icon, height = 18),  # Changed from 12 to 18
+            render.Box(
+                height = 18,  # Changed from 12 to 18 to match image
+                padding = 1,
+                child = render.Column(
+                    children = [
+                        render.Text(content = "Tail #", font = "CG-pixel-4x5-mono"),  # Added font for consistency
+                        render.Text(content = aircraft_data[0].upper()),
+                    ],
+                    cross_align = "center",
                 ),
-            ],
-            expanded = True,
-        ),
-    )
+            ),
+        ],
+        expanded = True,
+    ),
+)
 
-    aircraft_long_name = ""
+    aircraft_short_code = ""
     if aircraft_data[1] != None:
-        aircraft_long_name = aircraft_data[1]
+        aircraft_short_code = aircraft_data[1]
     else:
-        aircraft_long_name = "No Description"
+        aircraft_short_code = "No Type"
 
     frame2.append(
         render.Row(
             children = [
                 render.Box(
                     child = render.WrappedText(
-                        content = aircraft_long_name,
-                        height = 6,
+                        content = aircraft_short_code,
+                        height = 12,  # Changed from 6 to 12 for better readability
                         align = "center",
                         font = "tom-thumb",
                     ),
