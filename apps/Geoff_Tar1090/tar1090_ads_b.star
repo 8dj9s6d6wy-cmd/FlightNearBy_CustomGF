@@ -617,14 +617,14 @@ def main(config):
     frame2.append(
         render.Row(
             children = [
-                render.Image(src = aircraft_icon, height = 9),
+                render.Image(src = aircraft_icon, height = 12),
                 render.Box(
-                    height = 9,
+                    height = 12,
                     padding = 1,
                     child = render.Column(
                         children = [
-                            render.Text(content = "REG", font = "tom-thumb"),
-                            render.Text(content = aircraft_data[0].upper()),
+                            render.Text(content = "Tail #", font = "tom-thumb"),
+                            render.Text(content = aircraft_data[0].upper(),font = "tom-thumb"),
                         ],
                         cross_align = "center",
                     ),
