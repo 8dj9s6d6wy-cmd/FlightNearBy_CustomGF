@@ -9,7 +9,7 @@ load("cache.star", "cache")
 load("encoding/json.star", "json")
 load("filter.star", "filter")
 load("http.star", "http")
-load("math.star", "math")
+#load("math.star", "math")
 load("render.star", "canvas", "render")
 load("schema.star", "schema")
 # Static asset loading (add after line 6)
@@ -10781,7 +10781,11 @@ CATEGORY_ICONS = {
 }
 
 def get_airplane_shape(flight, debug_enabled=False):
-    """Determine the appropriate airplane icon shape for a flight."""
+    """Determine the appropriate airplane icon shape for a flight.
+    
+    Args:
+          flight: argument description, can be
+            multiline with additional indentation"""
     debug_print("Processing flight:", flight.get("flight_number", "Unknown"), debug_enabled)
     
     type_designator = flight.get("aircraft_code")
@@ -10816,15 +10820,15 @@ def get_airplane_shape(flight, debug_enabled=False):
 
 def get_entity_status(ha_server, entity_id, token, show_dummy_info=False):
     if ha_server == None:
-        print("Home Assistant server not configured")
+        #print("Home Assistant server not configured")
         return None
     
     if entity_id == None:
-        print("Entity ID not configured")
+        #print("Entity ID not configured")
         return None
     
     if token == None:
-        print("Bearer token not configured")
+        #print("Bearer token not configured")
         return None
     if show_dummy_info == True:
         return None
@@ -10863,7 +10867,10 @@ def filter_flight(flight):
     return eja.startswith("EJA") or eja.startswith("EJM")
 
 def debug_print(message, data=None, debug_enabled=False):
-    """Print debug messages when debug_enabled is True"""
+    """Print debug messages when debug_enabled is True 
+    Args:
+          message: argument description, can be
+            multiline with additional indentation."""
     if debug_enabled:
         if data != None:
             print("[DEBUG] %s: %s" % (message, data))
@@ -10878,7 +10885,7 @@ def main(config):
     ha_server = config.get("homeassistant_server")  #Don't forget to include a port at the end of the URL if using one
     entity_id = config.get("homeassistant_entity_id")  #The FlightRadar24 Integration sensor, default is 'sensor.flightradar24_current_in_area'
     token = config.get("homeassistant_token")  #Your long lived access token
-    show_all_aircraft = config.bool("show_all_aircraft", False)
+    #show_all_aircraft = config.bool("show_all_aircraft", False)
     show_dummy_info = config.bool("show_dummy_info", False)
     DEBUG_ENABLED = config.bool("debug_mode", False)
 
@@ -10919,6 +10926,7 @@ def main(config):
         entity_status = get_entity_status(ha_server, entity_id, token, show_dummy_info)
         extracted_attributes = entity_status["attributes"] if entity_status and "attributes" in entity_status else dict()
         flights = extracted_attributes["flights"] if "flights" in extracted_attributes else dict()
+        squawk = extracted_attributes["squawk"] if "squawk" in extracted_attributes else dict()
         matches_filters = [flight for flight in flights if filter_flight(flight)]
         sorted_matches = sorted(
             matches_filters,
@@ -10967,7 +10975,7 @@ def main(config):
 			    main_align = "space_between",  # Changed from "between_evenly"
 			    children = [
 		        render.Text(origin, font = "tom-thumb"),
-		        render.Text("→", color = "#CC785C"),
+		        render.Text("-", color = "#CC785C", font = "tom-thumb"),
 		        render.Text(destination, font = "tom-thumb"),
 				    ],
 					)
