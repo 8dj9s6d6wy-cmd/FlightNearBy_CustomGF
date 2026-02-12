@@ -629,15 +629,19 @@ def main(config):
                     height = 32,
                     child = render.Column(
                         children = [
-                            render.Text(content = (aircraft_data[0].upper() if aircraft_data[0] else "N/A")),
+                            render.Text(
+                                content = aircraft_data[0].upper() if aircraft_data[0] else "N/A",
+                                font = "tom-thumb",
+                            ),
                             render.WrappedText(
                                 content = aircraft_data[3] if aircraft_data[3] != None else "No Description",
                                 font = "tom-thumb",
                                 width = 46,
+                                align = "center",  # Center the wrapped text
                             ),
                         ],
-                        cross_align = "center",
-                        main_align = "space_around",  # Align content to top of box
+                        cross_align = "center",  # Center all children horizontally
+                        main_align = "center",   # Center all children vertically
                     ),
                 ),
             ],
