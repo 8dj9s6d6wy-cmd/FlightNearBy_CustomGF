@@ -370,16 +370,16 @@ def get_callsign(aircraft):
 def get_aircraft_icon(category, designator, description, addrtype, color):
     aircraft_icon_response = http.get("https://tar1090tidbyt.azurewebsites.net/api/aircraft_icon?category=%s&typeDesignator=%s&typeDescription=%s&addrtype=%s&color=%s" % (category, designator, description, addrtype, color), ttl_seconds = 86400)
     
+    # Debug output
+    print("=== Aircraft Icon API Response ===")
+    print("Status Code:", aircraft_icon_response.status_code)
+    print("Headers:", aircraft_icon_response.headers)
+    print("Body Type:", type(aircraft_icon_response.body()))
+    print("Body Length:", len(aircraft_icon_response.body()))
+    print("==================================")
+    
     if aircraft_icon_response.status_code != 200:
         fail("tar1090 request failed with status %d" % (aircraft_icon_response.status_code))
-    
-    # Try to parse as JSON to see if there's metadata
-    try:
-        json_data = aircraft_icon_response.json()
-        print("API returned JSON:", json_data)
-        # If JSON exists, it might have fields like: icon, metadata, etc.
-    except:
-        print("API returned binary image data (not JSON)")
     
     aircraft_icon = aircraft_icon_response.body()
     return aircraft_icon
