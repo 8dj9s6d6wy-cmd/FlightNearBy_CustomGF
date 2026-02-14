@@ -32,7 +32,7 @@ EMERGENCY_SQUAWKS = {
 }
 
 AIRHEX_URL_BASE = "https://content.airhex.com/content/logos/airlines_"
-AIRHEX_URL_SUFFIX = "_30_30_r.png"
+AIRHEX_URL_SUFFIX = "_12_12_s.png"
 
 # Taken from https://github.com/wiedehopf/tar1090/blob/5f12e20935806e69f352066ca8010c75a647ffc9/html/flags.js as the mappings are the same
 ICAO_Ranges = [
@@ -542,8 +542,13 @@ def main(config):
                 render.Box(
                     height = 12,
                     width = 24,
-                    child = render.Image(src = media_image, width = 24, height = 12)
+                    child = render.Stack(
+                        children = [
+                            render.Box(width = 24, height = 12),  # Spacer
+                            render.Image(src = media_image, width = 18, height = 9),
+                        ],
                     ),
+                ),
                 render.Box(
                     height = 12,
                     width = 40,
