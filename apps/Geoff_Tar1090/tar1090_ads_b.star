@@ -542,12 +542,10 @@ def main(config):
                 render.Box(
                     height = 12,
                     width = 24,
-                    child = render.Stack(
-                        children = [
-                            render.Box(width = 24, height = 12),  # Spacer
-                            render.Image(src = media_image, width = 18, height = 9),
-                        ],
-                        cross_align = "center",
+                    child = render.Box(
+                        width = 24,
+                        height = 12,
+                        child = render.Image(src = media_image, height = 12),
                     ),
                 ),
                 render.Box(
