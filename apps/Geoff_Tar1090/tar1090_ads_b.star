@@ -27,8 +27,8 @@ NMI_TO_MI_RATIO = 1.1508
 
 EMERGENCY_SQUAWKS = {
     "7500": "HIJACK",
-    "7600": "RAD FAIL",
-    "7700": "EMERG"
+    "7600": "RADIO FAIL",
+    "7700": "EMERGENCY"
 }
 
 AIRHEX_URL_BASE = "https://content.airhex.com/content/logos/airlines_"
@@ -290,9 +290,9 @@ def get_db_version(tar_url):
 def generate_dummy_aircraft():
     dummy_aircraft = [
         {
-            "hex": "ABEA47",
+            "hex": "a12345",
             "type": "adsb_icao",
-            "flight": "EJA867  ",
+            "flight": "EJA123  ",
             "alt_baro": 35000,
             "alt_geom": 34800,
             "gs": 450.5,
@@ -300,7 +300,7 @@ def generate_dummy_aircraft():
             "geom_rate": 0,
             "squawk": "1234",
             "emergency": "none",
-            "category": "A2",
+            "category": "A3",
             "lat": 40.0,
             "lon": -83.0,
             "nic": 9,
@@ -552,10 +552,10 @@ def main(config):
         # For dummy mode, we need to create fake aircraft_data
         # Format: [registration, type_designator, manufacturer, description]
         if dummy_mode == "aircraft1":
-            aircraft_data = ["N123NJ", "GLF5", "Gulfstream Aerospace", "Gulfstream V"]
-            aircraft_desc = "Gulfstream V"
+            aircraft_data = ["FAKE", "C700", "CESSNA", "Citation Longitude"]
+            aircraft_desc = "CESSNA 700 Citation Longitude"
         elif dummy_mode == "aircraft2":
-            aircraft_data = ["N456UA", "B738", "Boeing", "Boeing 737-800"]
+            aircraft_data = ["FAKE", "B738", "Boeing", "Boeing 737-800"]
             aircraft_desc = "Boeing 737-800"
         else:
             return unable_to_reach_tar_error("NO DUMMY AIRCRAFT SELECTED")
@@ -602,27 +602,41 @@ def main(config):
     airline_code = None
     if "flight" in aircraft and aircraft["flight"]:
         airline_code = aircraft["flight"].strip()[:3].upper()
+    
+    print("=== AIRLINE LOGO DEBUG ===")
+    print("Flight callsign:", aircraft.get("flight", "NONE"))
+    print("Extracted airline_code:", airline_code)
 
     # First check if it's NetJets
     if airline_code in ["EJA", "EJM"]:
+        print("NetJets detected - using NJA logo")
         media_image = NJA_TAIL.readall()
     elif airline_code:
         # Try to get airline logo using first 3 characters of callsign
-        res = http.get("%s%s%s" % (AIRHEX_URL_BASE, airline_code, AIRHEX_URL_SUFFIX), ttl_seconds = 86400)
+        logo_url = "%s%s%s" % (AIRHEX_URL_BASE, airline_code, AIRHEX_URL_SUFFIX)
+        print("Attempting to fetch airline logo from:", logo_url)
+        res = http.get(logo_url, ttl_seconds = 86400)
+        print("Logo fetch status code:", res.status_code)
         if res.status_code == 200:
+            print("Successfully loaded airline logo")
             media_image = res.body()
         else:
+            print("Logo fetch failed - falling back to flag")
             # Fallback to country flag if airline logo fails
             if dummy_mode != "none":
                 media_image = BLANK_ASSET.readall()
             else:
                 media_image = find_flag(aircraft["hex"])
     else:
+        print("No airline code - using flag")
         # Use country flag as fallback for missing callsign
         if dummy_mode != "none":
             media_image = BLANK_ASSET.readall()
         else:
             media_image = find_flag(aircraft["hex"])
+    
+    print("media_image is None:", media_image == None)
+    print("==========================")
 
     # Get aircraft icon - use blank for dummy mode if API fails
     if dummy_mode != "none":
@@ -702,7 +716,7 @@ def main(config):
 
     # Create text element with conditional formatting
     if is_emergency:
-        text_element = render.Text(content = content, font = "tb-8", color = "#FF0000")
+        text_element = render.Text(content = content, font = "5x8", color = "#FF0000")
     else:
         text_element = render.Text(content = content)
 
