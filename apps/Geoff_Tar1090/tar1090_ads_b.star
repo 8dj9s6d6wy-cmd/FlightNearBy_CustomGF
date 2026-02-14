@@ -547,6 +547,7 @@ def main(config):
                             render.Box(width = 24, height = 12),  # Spacer
                             render.Image(src = media_image, width = 18, height = 9),
                         ],
+                        cross_align = "center",
                     ),
                 ),
                 render.Box(
