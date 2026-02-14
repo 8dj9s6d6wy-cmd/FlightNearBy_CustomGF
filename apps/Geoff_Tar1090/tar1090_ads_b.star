@@ -290,9 +290,9 @@ def get_db_version(tar_url):
 def generate_dummy_aircraft():
     dummy_aircraft = [
         {
-            "hex": "a12345",
+            "hex": "ABEA47",
             "type": "adsb_icao",
-            "flight": "EJA123  ",
+            "flight": "EJA867  ",
             "alt_baro": 35000,
             "alt_geom": 34800,
             "gs": 450.5,
@@ -300,7 +300,7 @@ def generate_dummy_aircraft():
             "geom_rate": 0,
             "squawk": "1234",
             "emergency": "none",
-            "category": "A3",
+            "category": "A2",
             "lat": 40.0,
             "lon": -83.0,
             "nic": 9,
