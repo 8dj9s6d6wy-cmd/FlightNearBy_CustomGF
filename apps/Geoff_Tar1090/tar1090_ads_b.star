@@ -528,8 +528,8 @@ def main(config):
         aircraft_data[1],
         aircraft_desc,
         aircraft.get("type", None),
-        get_altitude_icon_color(aircraft["alt_baro"]),
-        # get_altitude_icon_color(aircraft.get("alt_baro",0)),
+        #get_altitude_icon_color(aircraft["alt_baro"]),
+        get_altitude_icon_color(aircraft.get("alt_baro",0)),
     )
 
     animation_frames = list()
@@ -539,10 +539,10 @@ def main(config):
     frame1.append(
         render.Row(
             children = [
-                render.Image(src = media_image, width = 18, height = 9),
+                render.Image(src = media_image, width = 24, height = 12),
                 render.Box(
                     height = 12,
-                    width = 46,
+                    width = 40,
                     child = render.Column(
                         children = [
                             render.Text(content = "Flight", font = "CG-pixel-4x5-mono"),
