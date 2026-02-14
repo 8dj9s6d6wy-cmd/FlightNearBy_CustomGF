@@ -27,8 +27,8 @@ NMI_TO_MI_RATIO = 1.1508
 
 EMERGENCY_SQUAWKS = {
     "7500": "HIJACK",
-    "7600": "RADIO FAIL",
-    "7700": "EMERGENCY"
+    "7600": "RAD FAIL",
+    "7700": "EMERG"
 }
 
 AIRHEX_URL_BASE = "https://content.airhex.com/content/logos/airlines_"
