@@ -286,6 +286,82 @@ def get_db_version(tar_url):
         return None
     return response.json()["databaseVersion"]
 
+# Generate dummy aircraft for testing
+def generate_dummy_aircraft():
+    dummy_aircraft = [
+        {
+            "hex": "a12345",
+            "type": "adsb_icao",
+            "flight": "EJA123  ",
+            "alt_baro": 35000,
+            "alt_geom": 34800,
+            "gs": 450.5,
+            "track": 90.5,
+            "geom_rate": 0,
+            "squawk": "1234",
+            "emergency": "none",
+            "category": "A3",
+            "lat": 40.0,
+            "lon": -83.0,
+            "nic": 9,
+            "rc": 75,
+            "seen_pos": 0.5,
+            "r_dst": 15.5,
+            "r_dir": 180.0,
+            "version": 2,
+            "nic_baro": 1,
+            "nac_p": 10,
+            "nac_v": 2,
+            "sil": 3,
+            "sil_type": "perhour",
+            "gva": 2,
+            "sda": 2,
+            "alert": 0,
+            "spi": 0,
+            "mlat": [],
+            "tisb": [],
+            "messages": 500,
+            "seen": 0.1,
+            "rssi": -18.5
+        },
+        {
+            "hex": "7700aa",
+            "type": "adsb_icao",
+            "flight": "UAL456  ",
+            "alt_baro": 8000,
+            "alt_geom": 7900,
+            "gs": 250.0,
+            "track": 270.0,
+            "geom_rate": -500,
+            "squawk": "7700",
+            "emergency": "general",
+            "category": "A5",
+            "lat": 40.5,
+            "lon": -83.5,
+            "nic": 8,
+            "rc": 150,
+            "seen_pos": 1.0,
+            "r_dst": 8.2,
+            "r_dir": 45.0,
+            "version": 2,
+            "nic_baro": 1,
+            "nac_p": 9,
+            "nac_v": 1,
+            "sil": 2,
+            "sil_type": "perhour",
+            "gva": 1,
+            "sda": 2,
+            "alert": 1,
+            "spi": 0,
+            "mlat": [],
+            "tisb": [],
+            "messages": 850,
+            "seen": 0.3,
+            "rssi": -22.1
+        }
+    ]
+    return dummy_aircraft
+
 # Aircraft descriptions
 def lookup_aircraft_desc(tar_url, aircraft_data, db_version):
     response = http.get("%s/db-%s/%s.js" % (tar_url, db_version, "icao_aircraft_types"), ttl_seconds = 86400)
@@ -460,28 +536,64 @@ def validate_url(url):
 
 def main(config):
     tar_url = config.str("tar1090url", TAR1090_URL_DEFAULT)
+    dummy_mode = config.str("dummy_mode", "none")
 
-    if tar_url == TAR1090_URL_DEFAULT:
-        return unable_to_reach_tar_error(tar_url)
+    # Check if using dummy data
+    if dummy_mode != "none":
+        dummy_aircraft = generate_dummy_aircraft()
+        
+        if dummy_mode == "aircraft1":
+            aircrafts = [dummy_aircraft[0]]
+        elif dummy_mode == "aircraft2":
+            aircrafts = [dummy_aircraft[1]]
+        else:
+            aircrafts = []
+        
+        # For dummy mode, we need to create fake aircraft_data
+        # Format: [registration, type_designator, manufacturer, description]
+        if dummy_mode == "aircraft1":
+            aircraft_data = ["N123NJ", "GLF5", "Gulfstream Aerospace", "Gulfstream V"]
+            aircraft_desc = "Gulfstream V"
+        elif dummy_mode == "aircraft2":
+            aircraft_data = ["N456UA", "B738", "Boeing", "Boeing 737-800"]
+            aircraft_desc = "Boeing 737-800"
+        else:
+            return unable_to_reach_tar_error("NO DUMMY AIRCRAFT SELECTED")
+        
+        aircraft = aircrafts[0]
+        db_version = "dummy"
+    else:
+        # Normal operation - fetch from tar1090
+        if tar_url == TAR1090_URL_DEFAULT:
+            return unable_to_reach_tar_error(tar_url)
 
-    if validate_url(tar_url) == False:
-        return unable_to_reach_tar_error(tar_url)
+        if validate_url(tar_url) == False:
+            return unable_to_reach_tar_error(tar_url)
 
-    db_version = get_db_version(tar_url)
-    if db_version == None:
-        return unable_to_reach_tar_error(tar_url)
+        db_version = get_db_version(tar_url)
+        if db_version == None:
+            return unable_to_reach_tar_error(tar_url)
+
+        response = http.get(tar_url + "/data/aircraft.json")
+        if response.status_code != 200:
+            return unable_to_reach_tar_error(tar_url)
+
+        aircrafts = response.json()["aircraft"]
+
+        aircraft = find_nearest_aircraft(aircrafts)
+        if aircraft == None:
+            return unable_to_reach_tar_error(tar_url)
+
+        # Fetch aircraft data from database
+        aircraft_data = lookup_db(tar_url, aircraft["hex"], 1, db_version)
+        if aircraft_data == None:
+            return unable_to_reach_tar_error(tar_url)
+
+        aircraft_desc = lookup_aircraft_desc(tar_url, aircraft_data, db_version)
+        if aircraft_desc == None:
+            return unable_to_reach_tar_error(tar_url)
 
     conversion_unit = config.str("units", DEFAULT_CONVERSION_UNITS)
-
-    response = http.get(tar_url + "/data/aircraft.json")
-    if response.status_code != 200:
-        return unable_to_reach_tar_error(tar_url)
-
-    aircrafts = response.json()["aircraft"]
-
-    aircraft = find_nearest_aircraft(aircrafts)
-    if aircraft == None:
-        return unable_to_reach_tar_error(tar_url)
 
     # Get airline logo or fallback to flag
     media_image = None
@@ -501,36 +613,33 @@ def main(config):
             media_image = res.body()
         else:
             # Fallback to country flag if airline logo fails
-            media_image = find_flag(aircraft["hex"])
+            if dummy_mode != "none":
+                media_image = BLANK_ASSET.readall()
+            else:
+                media_image = find_flag(aircraft["hex"])
     else:
         # Use country flag as fallback for missing callsign
-        media_image = find_flag(aircraft["hex"])
+        if dummy_mode != "none":
+            media_image = BLANK_ASSET.readall()
+        else:
+            media_image = find_flag(aircraft["hex"])
 
-    # THIS MUST COME BEFORE THE DEBUG PRINT!
-    aircraft_data = lookup_db(tar_url, aircraft["hex"], 1, db_version)
-    if aircraft_data == None:
-        return unable_to_reach_tar_error(tar_url)
-
-    # NOW you can debug print aircraft_data
-    print("=== AIRCRAFT_DATA DEBUG ===")
-    
-    if aircraft_data:
-        for i in range(len(aircraft_data)):
-            print("aircraft_data[%d]:" % i, aircraft_data[i])
-    print("===========================")
-
-    aircraft_desc = lookup_aircraft_desc(tar_url, aircraft_data, db_version)
-    if aircraft_desc == None:
-        return unable_to_reach_tar_error(tar_url)
-
-    aircraft_icon = get_aircraft_icon(
-        aircraft["category"],
-        aircraft_data[1],
-        aircraft_desc,
-        aircraft.get("type", None),
-        #get_altitude_icon_color(aircraft["alt_baro"]),
-        get_altitude_icon_color(aircraft.get("alt_baro",0)),
-    )
+    # Get aircraft icon - use blank for dummy mode if API fails
+    if dummy_mode != "none":
+        aircraft_icon_response = http.get("https://tar1090tidbyt.azurewebsites.net/api/aircraft_icon?category=%s&typeDesignator=%s&typeDescription=%s&addrtype=%s&color=%s" % (aircraft["category"], aircraft_data[1], aircraft_desc, aircraft.get("type", "adsb_icao"), get_altitude_icon_color(aircraft.get("alt_baro",0))), ttl_seconds = 86400)
+        if aircraft_icon_response.status_code == 200:
+            aircraft_icon = aircraft_icon_response.body()
+        else:
+            # Use blank icon if API fails in dummy mode
+            aircraft_icon = BLANK_ASSET.readall()
+    else:
+        aircraft_icon = get_aircraft_icon(
+            aircraft["category"],
+            aircraft_data[1],
+            aircraft_desc,
+            aircraft.get("type", None),
+            get_altitude_icon_color(aircraft.get("alt_baro",0)),
+        )
 
     animation_frames = list()
     frame1 = list()
@@ -542,9 +651,8 @@ def main(config):
                 render.Box(
                     height = 12,
                     width = 24,
-                    child = render.Box(
-                        width = 24,
-                        height = 12,
+                    child = render.Padding(
+                        pad = (0, 0, 0, 0),
                         child = render.Image(src = media_image, height = 12),
                     ),
                 ),
@@ -663,7 +771,7 @@ def main(config):
     )
 
 def get_schema():
-    options = [
+    unit_options = [
         schema.Option(
             display = "Aeronautical",
             value = "a",
@@ -675,6 +783,21 @@ def get_schema():
         schema.Option(
             display = "Imperial",
             value = "i",
+        ),
+    ]
+
+    dummy_options = [
+        schema.Option(
+            display = "None (Use Live Data)",
+            value = "none",
+        ),
+        schema.Option(
+            display = "Dummy Aircraft 1 (NetJets @ 35,000ft)",
+            value = "aircraft1",
+        ),
+        schema.Option(
+            display = "Dummy Aircraft 2 (Emergency @ 8,000ft)",
+            value = "aircraft2",
         ),
     ]
 
@@ -692,8 +815,16 @@ def get_schema():
                 name = "Units",
                 desc = "Unit type measurements will be displayed in.",
                 icon = "brush",
-                default = options[0].value,
-                options = options,
+                default = unit_options[0].value,
+                options = unit_options,
+            ),
+            schema.Dropdown(
+                id = "dummy_mode",
+                name = "Test Mode",
+                desc = "Use dummy aircraft data for testing instead of live data.",
+                icon = "vial",
+                default = dummy_options[0].value,
+                options = dummy_options,
             ),
         ],
     )
