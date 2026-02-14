@@ -539,10 +539,10 @@ def main(config):
     frame1.append(
         render.Row(
             children = [
-                render.Image(src = media_image, width = 30, height = 15),
+                render.Image(src = media_image, width = 18, height = 9),
                 render.Box(
                     height = 12,
-                    width = 45,
+                    width = 46,
                     child = render.Column(
                         children = [
                             render.Text(content = "Flight", font = "CG-pixel-4x5-mono"),
