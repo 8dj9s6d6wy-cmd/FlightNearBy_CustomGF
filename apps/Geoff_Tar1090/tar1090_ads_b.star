@@ -513,6 +513,7 @@ def main(config):
 
     # NOW you can debug print aircraft_data
     print("=== AIRCRAFT_DATA DEBUG ===")
+    print("flight: "+ aircraft["flight"])
     if aircraft_data:
         for i in range(len(aircraft_data)):
             print("aircraft_data[%d]:" % i, aircraft_data[i])
