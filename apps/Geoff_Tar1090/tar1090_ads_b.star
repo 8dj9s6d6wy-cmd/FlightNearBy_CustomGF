@@ -31,7 +31,7 @@ EMERGENCY_SQUAWKS = {
     "7700": "EMERGENCY"
 }
 
-AIRHEX_URL_BASE = "https://content.airhex.com/content/logos/airlines_"
+AIRHEX_URL_BASE = "http://content.airhex.com/content/logos/airlines_"
 AIRHEX_URL_SUFFIX = "_50_50_s.png"
 
 # Taken from https://github.com/wiedehopf/tar1090/blob/5f12e20935806e69f352066ca8010c75a647ffc9/html/flags.js as the mappings are the same
@@ -717,6 +717,7 @@ def main(config):
     # Create text element with conditional formatting
     if is_emergency:
         text_element = render.Marquee(
+                width = 64,
                 child = render.Text(content = content, font = "6x10", color = "#FF0000"),
         )
     else:
