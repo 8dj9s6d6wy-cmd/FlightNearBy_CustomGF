@@ -617,16 +617,7 @@ def main(config):
         print("Attempting to fetch airline logo from:", logo_url)
         res = http.get(logo_url, ttl_seconds = 86400)
         print("Logo fetch status code:", res.status_code)
-        if res.status_code == 200:
-            print("Successfully loaded airline logo")
-            media_image = res.body()
-        else:
-            print("Logo fetch failed - falling back to flag")
-            # Fallback to country flag if airline logo fails
-            if dummy_mode != "none":
-                media_image = BLANK_ASSET.readall()
-            else:
-                media_image = find_flag(aircraft["hex"])
+        media_image = res.body()
     else:
         print("No airline code - using flag")
         # Use country flag as fallback for missing callsign
