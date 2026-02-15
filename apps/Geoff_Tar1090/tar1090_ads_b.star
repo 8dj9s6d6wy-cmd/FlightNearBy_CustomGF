@@ -611,9 +611,25 @@ def main(config):
     if airline_code in ["EJA", "EJM"]:
         print("NetJets detected - using NJA logo")
         media_image = NJA_TAIL.readall()
+    elif airline_code:
+        # Try to get airline logo using first 3 characters of callsign
+        logo_url = "%s%s%s" % (AIRHEX_URL_BASE, airline_code, AIRHEX_URL_SUFFIX)
+        print("Attempting to fetch airline logo from:", logo_url)
+        res = http.get(logo_url, ttl_seconds = 86400)
+        print("Logo fetch status code:", res.status_code)
+        if res.status_code == 200:
+            print("Successfully loaded airline logo")
+            media_image = res.body()
+        else:
+            print("Logo fetch failed - falling back to flag")
+            # Fallback to country flag if airline logo fails
+            if dummy_mode != "none":
+                media_image = BLANK_ASSET.readall()
+            else:
+                media_image = find_flag(aircraft["hex"])
     else:
-        # Skip airline logo API (returns 401) and go straight to flag
-        print("Using flag instead of airline logo (API blocked)")
+        print("No airline code - using flag")
+        # Use country flag as fallback for missing callsign
         if dummy_mode != "none":
             media_image = BLANK_ASSET.readall()
         else:
