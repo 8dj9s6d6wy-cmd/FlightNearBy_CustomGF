@@ -552,7 +552,7 @@ def main(config):
         # For dummy mode, we need to create fake aircraft_data
         # Format: [registration, type_designator, manufacturer, description]
         if dummy_mode == "aircraft1":
-            aircraft_data = ["FAKE", "C700", "CESSNA", "Citation Longitude"]
+            aircraft_data = ["FAKE", "C700", "CESSNA", "Cessna 700 Citation Longitude"]
             aircraft_desc = "CESSNA 700 Citation Longitude"
         elif dummy_mode == "aircraft2":
             aircraft_data = ["FAKE", "B738", "Boeing", "Boeing 737-800"]
@@ -716,7 +716,7 @@ def main(config):
 
     # Create text element with conditional formatting
     if is_emergency:
-        text_element = render.Text(content = content, font = "5x8", color = "#FF0000")
+        text_element = render.Text(content = content, font = "CG-pixel-4x5-mono", color = "#FF0000")
     else:
         text_element = render.Text(content = content)
 
