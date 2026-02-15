@@ -716,7 +716,9 @@ def main(config):
 
     # Create text element with conditional formatting
     if is_emergency:
-        text_element = render.Marquee(content = content, font = "Dina_r400-6", color = "#FF0000")
+        text_element = render.Marquee(
+                child = render.Text(content = content, font = "Dina_r400-6", color = "#FF0000")
+                )
     else:
         text_element = render.Text(content = content)
 
