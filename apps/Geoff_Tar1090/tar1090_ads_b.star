@@ -730,7 +730,7 @@ def main(config):
                     child = text_element,
                 ),
             ],
-            main_align = "space_around",
+            #main_align = "space_around",
             expanded = True,
         ),
     )
