@@ -706,7 +706,7 @@ def main(config):
     # Check for emergency squawk code first
     is_emergency = False
     if "squawk" in aircraft and aircraft["squawk"] in EMERGENCY_SQUAWKS:
-        content = "%s: %s" % (aircraft["squawk"], EMERGENCY_SQUAWKS[aircraft["squawk"]])
+        content = "!!!%s: %s!!!" % (aircraft["squawk"], EMERGENCY_SQUAWKS[aircraft["squawk"]])
         is_emergency = True
     elif "r_dst" in aircraft:
         dst = convert_dst(conversion_unit, aircraft["r_dst"])
@@ -718,7 +718,7 @@ def main(config):
     if is_emergency:
         text_element = render.Marquee(
             width = 64,
-            child = render.Text(content = content, font = "tom-thumb", color = "#FF0000"),
+            child = render.Text(content = content, font = "6x10", color = "#FF0000"),
         )
     else:
         text_element = render.Text(content = content)
