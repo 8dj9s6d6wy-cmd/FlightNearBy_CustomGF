@@ -725,13 +725,13 @@ def main(config):
             children = [
                 render.Box(
                     render.Marquee(
-                    width = 64,
+                    width = 60,
                     child = text_element,
                     ),
                 )
             ],
-            #main_align = "space_around",
-            #expanded = True,
+            main_align = "space_around",
+            expanded = True,
         ),
     )
 
