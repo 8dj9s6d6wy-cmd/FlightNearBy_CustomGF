@@ -2,7 +2,9 @@
 Applet: TAR1090 ADS-B
 Summary: ADS-B From Your Station
 Description: ADS-B Information from your publically available tar1090 instance.
-Author: Cameron Battagler
+Author: Modified by Geoff Finnegan
+
+Next Idea: Alternative location point. 
 """
 
 load("http.star", "http")
