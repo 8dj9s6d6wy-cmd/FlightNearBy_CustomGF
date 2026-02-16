@@ -398,7 +398,13 @@ def lookup_db(tar_url, icao, level, db_version):
 
 
 # Sort algorithm for aircraft: emergency first, then EJA/EJM, then by distance
-def aircraft_distance_sort(aircraft):
+def aircraft_distance_sort(aircraft, priority_distance):
+    # Get distance
+    if "r_dst" in aircraft:
+        distance = aircraft["r_dst"]
+    else:
+        distance = 10000
+    
     # Check for emergency squawk code (highest priority)
     is_emergency = False
     if "squawk" in aircraft and aircraft["squawk"] in EMERGENCY_SQUAWKS:
@@ -408,29 +414,16 @@ def aircraft_distance_sort(aircraft):
     is_priority = False
     if "flight" in aircraft:
         callsign = aircraft["flight"].strip().upper()
-        if callsign.startswith("EJA") or callsign.startswith("EJM"):
+        if (callsign.startswith("EJA") or callsign.startswith("EJM")) and distance <= priority_distance:
             is_priority = True
     
-    # Get distance
-    if "r_dst" in aircraft:
-        distance = aircraft["r_dst"]
-    else:
-        # If we don't have distance, return arbitrary high number
-        distance = 10000
-    
-    # Return tuple: (emergency_flag, priority_flag, distance)
-    # Emergency aircraft get (False, ...) - sorts first
-    # Priority aircraft get (True, False, ...) - sorts second
-    # Regular aircraft get (True, True, ...) - sorts last
-    # Within each group, sort by distance
     return (not is_emergency, not is_priority, distance)
 
 # Return nearest aircraft to station
-def find_nearest_aircraft(aircrafts):
-    aircrafts = sorted(aircrafts, key = aircraft_distance_sort)
+def find_nearest_aircraft(aircrafts, priority_distance):
+    aircrafts = sorted(aircrafts, key = lambda aircraft: aircraft_distance_sort(aircraft, priority_distance))
     for aircraft in aircrafts:
         if "category" in aircraft and "flight" in aircraft and "alt_baro" in aircraft:
-            # print(aircraft)
             return aircraft
     return None
 
@@ -537,6 +530,7 @@ def validate_url(url):
 def main(config):
     tar_url = config.str("tar1090url", TAR1090_URL_DEFAULT)
     dummy_mode = config.str("dummy_mode", "none")
+    priority_distance = int(config.str("priority_distance", "10"))  # Get from config, default 10
 
     # Check if using dummy data
     if dummy_mode != "none":
@@ -580,7 +574,7 @@ def main(config):
 
         aircrafts = response.json()["aircraft"]
 
-        aircraft = find_nearest_aircraft(aircrafts)
+        aircraft = find_nearest_aircraft(aircrafts, priority_distance)
         if aircraft == None:
             return unable_to_reach_tar_error(tar_url)
 
@@ -822,6 +816,19 @@ def get_schema():
                 icon = "brush",
                 default = unit_options[0].value,
                 options = unit_options,
+            ),
+            schema.Dropdown(
+                id = "priority_distance",
+                name = "Priority Airline Distance Threshold",
+                desc = "Distance threshold (in nautical miles) for priority airlines.",
+                icon = "ruler",
+                default = "10",
+                options = [
+                    schema.Option(display = "5 NM", value = "5"),   # ✅ Strings
+                    schema.Option(display = "10 NM", value = "10"),
+                    schema.Option(display = "15 NM", value = "15"),
+                    schema.Option(display = "20 NM", value = "20"),
+                ],
             ),
             schema.Dropdown(
                 id = "dummy_mode",
