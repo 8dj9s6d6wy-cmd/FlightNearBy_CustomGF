@@ -780,7 +780,8 @@ def main(config):
         ),
     )
 
-     # Calculate speed and distance
+     
+    # Calculate speed and distance
     spd = convert_spd(conversion_unit, aircraft.get("gs", 0))
 
     # Check for emergency squawk code first
