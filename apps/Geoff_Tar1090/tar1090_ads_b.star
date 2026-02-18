@@ -785,8 +785,8 @@ def main(config):
         content = "%s: %s" % (aircraft["squawk"], EMERGENCY_SQUAWKS[aircraft["squawk"]])
         is_emergency = True
     elif "r_dst" in aircraft:
-    dst = convert_dst(conversion_unit, aircraft["r_dst"])
-    content = "Sp: %.0f Dst: %.0f" % (spd, dst)  # %.0f rounds to no decimals
+        dst = convert_dst(conversion_unit, aircraft["r_dst"])
+        content = "Sp: %.0f Dst: %.0f" % (spd, dst)  # %.0f rounds to no decimals
     else:
         content = "Sp: %.0f" % spd
 
