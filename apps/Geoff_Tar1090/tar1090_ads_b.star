@@ -400,9 +400,13 @@ def lookup_db(tar_url, icao, level, db_version):
 
 
 # Sort algorithm for aircraft: emergency first, then EJA/EJM, then by distance
-def aircraft_distance_sort(aircraft, priority_distance):
-    # Get distance
-    if "r_dst" in aircraft:
+def aircraft_distance_sort(aircraft, priority_distance, use_custom_coords, custom_lat, custom_lon):
+    # Calculate distance
+    if use_custom_coords and "lat" in aircraft and "lon" in aircraft:
+        # Use custom coordinates to calculate distance
+        distance = calculate_distance(custom_lat, custom_lon, aircraft["lat"], aircraft["lon"])
+    elif "r_dst" in aircraft:
+        # Use existing distance from tar1090
         distance = aircraft["r_dst"]
     else:
         distance = 10000
@@ -422,8 +426,8 @@ def aircraft_distance_sort(aircraft, priority_distance):
     return (not is_emergency, not is_priority, distance)
 
 # Return nearest aircraft to station
-def find_nearest_aircraft(aircrafts, priority_distance):
-    aircrafts = sorted(aircrafts, key = lambda aircraft: aircraft_distance_sort(aircraft, priority_distance))
+def find_nearest_aircraft(aircrafts, priority_distance, use_custom_coords, custom_lat, custom_lon):
+    aircrafts = sorted(aircrafts, key = lambda aircraft: aircraft_distance_sort(aircraft, priority_distance, use_custom_coords, custom_lat, custom_lon))
     for aircraft in aircrafts:
         if "category" in aircraft and "flight" in aircraft and "alt_baro" in aircraft:
             return aircraft
@@ -504,6 +508,86 @@ def convert_dst(unit, value):
     else:
         return None
 
+# Calculate distance between two coordinates using Haversine formula
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    Returns distance in nautical miles
+    """
+    # Convert decimal degrees to radians
+    lat1_rad = lat1 * 3.14159265359 / 180.0
+    lon1_rad = lon1 * 3.14159265359 / 180.0
+    lat2_rad = lat2 * 3.14159265359 / 180.0
+    lon2_rad = lon2 * 3.14159265359 / 180.0
+    
+    # Haversine formula
+    dlat = lat2_rad - lat1_rad
+    dlon = lon2_rad - lon1_rad
+    a = (sin(dlat / 2) ** 2) + cos(lat1_rad) * cos(lat2_rad) * (sin(dlon / 2) ** 2)
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    
+    # Radius of earth in nautical miles
+    radius_nm = 3440.065
+    
+    distance = radius_nm * c
+    return distance
+
+# Add these math functions if not already imported
+def sin(x):
+    # Taylor series approximation for sine
+    result = x
+    term = x
+    for i in range(1, 10):
+        term = -term * x * x / ((2 * i) * (2 * i + 1))
+        result = result + term
+    return result
+
+def cos(x):
+    # Taylor series approximation for cosine
+    result = 1
+    term = 1
+    for i in range(1, 10):
+        term = -term * x * x / ((2 * i - 1) * (2 * i))
+        result = result + term
+    return result
+
+def sqrt(x):
+    # Newton's method for square root
+    if x == 0:
+        return 0
+    estimate = x / 2.0
+    for _ in range(10):
+        estimate = (estimate + x / estimate) / 2.0
+    return estimate
+
+def atan2(y, x):
+    # Approximation for atan2
+    if x > 0:
+        return atan(y / x)
+    elif x < 0 and y >= 0:
+        return atan(y / x) + 3.14159265359
+    elif x < 0 and y < 0:
+        return atan(y / x) - 3.14159265359
+    elif x == 0 and y > 0:
+        return 3.14159265359 / 2
+    elif x == 0 and y < 0:
+        return -3.14159265359 / 2
+    else:
+        return 0
+
+def atan(x):
+    # Taylor series approximation for arctangent
+    if x > 1:
+        return 3.14159265359 / 2 - atan(1 / x)
+    elif x < -1:
+        return -3.14159265359 / 2 - atan(1 / x)
+    result = 0
+    term = x
+    for i in range(20):
+        result = result + term
+        term = -term * x * x * (2 * i + 1) / (2 * i + 3)
+    return result
 # Our error display routine, spiced it up to be a bit more fun
 def unable_to_reach_tar_error(tar_url):
     return render.Root(
@@ -533,6 +617,11 @@ def main(config):
     tar_url = config.str("tar1090url", TAR1090_URL_DEFAULT)
     dummy_mode = config.str("dummy_mode", "none")
     priority_distance = int(config.str("priority_distance", "10"))  # Get from config, default 10
+    
+    # New custom coordinate settings
+    use_custom_coords = config.bool("use_custom_coords", False)
+    custom_lat = float(config.str("custom_lat", "0.0"))
+    custom_lon = float(config.str("custom_lon", "0.0"))
 
     # Check if using dummy data
     if dummy_mode != "none":
@@ -576,7 +665,7 @@ def main(config):
 
         aircrafts = response.json()["aircraft"]
 
-        aircraft = find_nearest_aircraft(aircrafts, priority_distance)
+        aircraft = find_nearest_aircraft(aircrafts, priority_distance, use_custom_coords, custom_lat, custom_lon)
         if aircraft == None:
             return unable_to_reach_tar_error(tar_url)
 
@@ -821,16 +910,37 @@ def get_schema():
             ),
             schema.Dropdown(
                 id = "priority_distance",
-                name = "Priority Airline Distance Threshold",
-                desc = "Distance threshold (in nautical miles) for priority airlines.",
+                name = "Priority Airline Distance",
+                desc = "Maximum distance (in nautical miles) to prioritize NetJets aircraft.",
                 icon = "ruler",
                 default = "10",
                 options = [
-                    schema.Option(display = "5 NM", value = "5"),   # ✅ Strings
+                    schema.Option(display = "5 NM", value = "5"),
                     schema.Option(display = "10 NM", value = "10"),
                     schema.Option(display = "15 NM", value = "15"),
                     schema.Option(display = "20 NM", value = "20"),
                 ],
+            ),
+            schema.Toggle(
+                id = "use_custom_coords",
+                name = "Use Custom Location",
+                desc = "Calculate distance from custom coordinates instead of tar1090 receiver location.",
+                icon = "locationDot",
+                default = False,
+            ),
+            schema.Text(
+                id = "custom_lat",
+                name = "Custom Latitude",
+                desc = "Latitude in decimal degrees (e.g., 40.7128 for New York).",
+                icon = "mapPin",
+                default = "0.0",
+            ),
+            schema.Text(
+                id = "custom_lon",
+                name = "Custom Longitude",
+                desc = "Longitude in decimal degrees (e.g., -74.0060 for New York).",
+                icon = "mapPin",
+                default = "0.0",
             ),
             schema.Dropdown(
                 id = "dummy_mode",
