@@ -524,7 +524,11 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     # Haversine formula
     dlat = lat2_rad - lat1_rad
     dlon = lon2_rad - lon1_rad
-    a = (sin(dlat / 2) ** 2) + cos(lat1_rad) * cos(lat2_rad) * (sin(dlon / 2) ** 2)
+    
+    # Calculate sin(dlat/2) and sin(dlon/2) then square them
+    sin_dlat_2 = sin(dlat / 2)
+    sin_dlon_2 = sin(dlon / 2)
+    a = (sin_dlat_2 * sin_dlat_2) + cos(lat1_rad) * cos(lat2_rad) * (sin_dlon_2 * sin_dlon_2)
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     
     # Radius of earth in nautical miles
