@@ -782,7 +782,8 @@ def main(config):
 
      
     # Calculate speed and distance
-    spd = convert_spd(conversion_unit, aircraft.get("gs", 0))
+   
+    spd = int(convert_spd(conversion_unit, aircraft.get("gs", 0)))
 
     # Check for emergency squawk code first
     is_emergency = False
@@ -790,10 +791,10 @@ def main(config):
         content = "%s: %s" % (aircraft["squawk"], EMERGENCY_SQUAWKS[aircraft["squawk"]])
         is_emergency = True
     elif "r_dst" in aircraft:
-        dst = convert_dst(conversion_unit, aircraft["r_dst"])
-        content = "Sp: %.0f Dst: %.0f" % (spd, dst)  # %.0f rounds to no decimals
+        dst = int(convert_dst(conversion_unit, aircraft["r_dst"]))
+        content = "Sp: %d Dst: %d" % (spd, dst)
     else:
-        content = "Sp: %.0f" % spd
+        content = "Sp: %d" % spd
 
     # Create text element with conditional formatting
     if is_emergency:
