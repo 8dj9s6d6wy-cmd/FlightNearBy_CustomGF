@@ -429,7 +429,7 @@ def aircraft_distance_sort(aircraft, priority_distance, use_custom_coords, custo
 def find_nearest_aircraft(aircrafts, priority_distance, use_custom_coords, custom_lat, custom_lon):
     aircrafts = sorted(aircrafts, key = lambda aircraft: aircraft_distance_sort(aircraft, priority_distance, use_custom_coords, custom_lat, custom_lon))
     for aircraft in aircrafts:
-        if "category" in aircraft and "flight" in aircraft and "alt_baro" in aircraft:
+        if "category" in aircraft and "alt_baro" in aircraft:
             return aircraft
     return None
 
@@ -627,6 +627,9 @@ def main(config):
     custom_lat = float(config.str("custom_lat", "0.0"))
     custom_lon = float(config.str("custom_lon", "0.0"))
 
+    if use_custom_coords and custom_lat == 0.0 and custom_lon == 0.0:
+        use_custom_coords = False
+        
     # Check if using dummy data
     if dummy_mode != "none":
         dummy_aircraft = generate_dummy_aircraft()
@@ -706,7 +709,10 @@ def main(config):
         print("Attempting to fetch airline logo from:", logo_url)
         res = http.get(logo_url, ttl_seconds = 86400)
         print("Logo fetch status code:", res.status_code)
-        media_image = res.body()
+        if res.status_code == 200:
+            media_image = res.body()
+        else:
+            media_image = find_flag(aircraft["hex"])  # fallback to flag
     else:
         print("No airline code - using flag")
         # Use country flag as fallback for missing callsign
@@ -830,11 +836,11 @@ def main(config):
                     child = render.Column(
                         children = [
                             render.Text(
-                                content = aircraft_data[0].upper() if aircraft_data[0] else "N/A",
+                                content = aircraft_data[3] if len(aircraft_data) > 3 and aircraft_data[3] != None else "N/A",
                                 #font = "tom-thumb",
                             ),
                             render.WrappedText(
-                                content = aircraft_data[3] if aircraft_data[3] != None else "No Description",
+                                content = aircraft_data[3] if len(aircraft_data) > 3 and aircraft_data[3] != None else "No Description",
                                 font = "tom-thumb",
                                 width = 46,
                                 align = "center",  # Center the wrapped text
