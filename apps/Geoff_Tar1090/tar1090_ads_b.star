@@ -629,7 +629,7 @@ def main(config):
 
     if use_custom_coords and custom_lat == 0.0 and custom_lon == 0.0:
         use_custom_coords = False
-        
+
     # Check if using dummy data
     if dummy_mode != "none":
         dummy_aircraft = generate_dummy_aircraft()
@@ -836,7 +836,7 @@ def main(config):
                     child = render.Column(
                         children = [
                             render.Text(
-                                content = aircraft_data[3] if len(aircraft_data) > 3 and aircraft_data[3] != None else "N/A",
+                                content = aircraft_data[0] if len(aircraft_data) > 0 and aircraft_data[0] != None else "N/A",
                                 #font = "tom-thumb",
                             ),
                             render.WrappedText(
