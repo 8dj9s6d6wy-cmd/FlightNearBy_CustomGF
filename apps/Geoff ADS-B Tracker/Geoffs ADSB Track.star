@@ -632,7 +632,7 @@ def main(config):
         bottom_color = "#FF0000"
     elif route != None:
         # hexdb returns "ORIG-DEST"; replace dash with > for display
-        bottom_content = route.replace("  -  ", "  >  ")
+        bottom_content = route.replace("-", "  >  ")
         bottom_color = "#FFFFFF"
     else:
         compass = track_to_compass(aircraft.get("track", 0))
@@ -644,10 +644,6 @@ def main(config):
     type_desc = hexdb_data.get("Type", "Unknown Type") if hexdb_data else "Unknown Type"
     icao_type = hexdb_data.get("ICAOTypeCode", "ZZZC") if hexdb_data else "ZZZC"
     owner = hexdb_data.get("RegisteredOwners", "Unknown Owner") if hexdb_data else "Unknown Owner"
-
-    # Prefix military owner for clarity
-    if is_mil:
-        owner = "[MIL] " + owner
 
     # Aircraft silhouette icon
     icon_alt = int(alt_baro) if alt_baro != "ground" else 0
@@ -688,7 +684,7 @@ def main(config):
         ]
     else:
         left_children = [
-            render.Text(content = "FLIGHT", font = "CG-pixel-4x5-mono"),
+            render.Text(content = "FLIGHT", font = "tom-thumb"),
             render.Text(content = callsign, font = "tom-thumb"),
         ]
 
