@@ -1,0 +1,9 @@
+---
+id: Geoffs-ADSB-Track
+name: TAR1090 ADS-B
+summary: ADS-B From Your Station
+desc: ADS-B Information from your publically available tar1090 instance.
+author: Ffeog
+fileName: Geoffs ADSB Track.star
+packageName: tar1090adsb
+recommendedInterval: 5
