@@ -632,7 +632,7 @@ def main(config):
         bottom_color = "#FF0000"
     elif route != None:
         # hexdb returns "ORIG-DEST"; replace dash with > for display
-        bottom_content = route.replace("-", ">")
+        bottom_content = route.replace("  -  ", "  >  ")
         bottom_color = "#FFFFFF"
     else:
         compass = track_to_compass(aircraft.get("track", 0))
@@ -733,6 +733,7 @@ def main(config):
                         content = bottom_content,
                         font = "tom-thumb",
                         color = bottom_color,
+                        cross_align = "center",
                     ),
                     scroll_direction = "horizontal",
                     offset_start = 5,
