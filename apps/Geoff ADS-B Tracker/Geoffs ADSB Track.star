@@ -46,9 +46,7 @@ MIL_KEYWORDS = [
 
 COMPASS_DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 
-# Taken from https://github.com/wiedehopf/tar1090/blob/5f12e20935806e69f352066ca8010c75a647ffc9/html/flags.js
-ICAO_Ranges = [
-    {"start": 0x004000, "end": 0x0043FF, "country": "Zimbabwe", "flag_image": "Zimbabwe.png"},
+
     {"start": 0x006000, "end": 0x006FFF, "country": "Mozambique", "flag_image": "Mozambique.png"},
     {"start": 0x008000, "end": 0x00FFFF, "country": "South Africa", "flag_image": "South_Africa.png"},
     {"start": 0x010000, "end": 0x017FFF, "country": "Egypt", "flag_image": "Egypt.png"},
@@ -258,9 +256,6 @@ ICAO_Ranges = [
     {"start": 0xB00000, "end": 0xBFFFFF, "country": "Unassigned (reserved for future use)", "flag_image": "blank.png"},
     {"start": 0xEC0000, "end": 0xEFFFFF, "country": "Unassigned (CAR region)", "flag_image": "blank.png"},
     {"start": 0xD00000, "end": 0xDFFFFF, "country": "Unassigned (reserved for future use)", "flag_image": "blank.png"},
-    {"start": 0xF00000, "end": 0xFFFFFF, "country": "Unassigned (reserved for future use)", "flag_image": "blank.png"},
-]
-
 # ── hexdb.io API helpers ──────────────────────────────────────────────────────
 
 def lookup_hexdb_aircraft(icao):
@@ -632,7 +627,7 @@ def main(config):
         bottom_color = "#FF0000"
     elif route != None:
         # hexdb returns "ORIG-DEST"; replace dash with > for display
-        bottom_content = route.replace("-", "  >  ")
+        bottom_content = route.replace("-", ">")
         bottom_color = "#FFFFFF"
     else:
         compass = track_to_compass(aircraft.get("track", 0))
@@ -644,6 +639,10 @@ def main(config):
     type_desc = hexdb_data.get("Type", "Unknown Type") if hexdb_data else "Unknown Type"
     icao_type = hexdb_data.get("ICAOTypeCode", "ZZZC") if hexdb_data else "ZZZC"
     owner = hexdb_data.get("RegisteredOwners", "Unknown Owner") if hexdb_data else "Unknown Owner"
+
+    # Prefix military owner for clarity
+    if is_mil:
+        owner = "[MIL] " + owner
 
     # Aircraft silhouette icon
     icon_alt = int(alt_baro) if alt_baro != "ground" else 0
@@ -684,7 +683,7 @@ def main(config):
         ]
     else:
         left_children = [
-            render.Text(content = "FLIGHT", font = "tom-thumb"),
+            render.Text(content = "FLIGHT", font = "CG-pixel-4x5-mono"),
             render.Text(content = callsign, font = "tom-thumb"),
         ]
 
@@ -729,7 +728,6 @@ def main(config):
                         content = bottom_content,
                         font = "tom-thumb",
                         color = bottom_color,
-                        cross_align = "center",
                     ),
                     scroll_direction = "horizontal",
                     offset_start = 5,
