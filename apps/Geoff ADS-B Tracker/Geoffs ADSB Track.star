@@ -62,19 +62,29 @@ def lookup_hexdb_aircraft(icao):
     return data
 
 def lookup_hexdb_route(callsign):
-    """Fetch ICAO route for a callsign from hexdb.io. Returns 'ORIG-DEST' string or None."""
+    """Fetch ICAO route for a callsign from hexdb.io.
+    Tries ICAO endpoint first, falls back to IATA.
+    Returns 'ORIG-DEST' string or None."""
     clean = callsign.strip()
     if len(clean) == 0:
         return None
+
+    # Try ICAO endpoint first
     url = "%s/route/icao/%s" % (HEXDB_BASE_URL, clean)
     response = http.get(url, ttl_seconds = 3600)
-    if response.status_code != 200:
-        return None
-    data = response.json()
-    if "error" in data:
-        return None
-    if "route" in data:
-        return data["route"]
+    if response.status_code == 200:
+        data = response.json()
+        if "error" not in data and "route" in data:
+            return data["route"]
+
+    # Fall back to IATA endpoint — better coverage for commercial flights
+    url = "%s/route/iata/%s" % (HEXDB_BASE_URL, clean)
+    response = http.get(url, ttl_seconds = 3600)
+    if response.status_code == 200:
+        data = response.json()
+        if "error" not in data and "route" in data:
+            return data["route"]
+
     return None
 
 # ── Aircraft classification helpers ──────────────────────────────────────────
@@ -539,34 +549,44 @@ def main(config):
                 height = 32,
                 child = render.Image(src = aircraft_icon, height = 18, width = 18),
             ),
-            render.Box(
-                width = 46,
-                height = 32,
-                child = render.Column(
-                    children = [
-                        render.Text(
+            render.Column(
+                children = [
+                    # Row 1: Registration — 7px tall
+                    render.Box(
+                        width = 46,
+                        height = 7,
+                        child = render.Text(
                             content = registration,
                             font = "tom-thumb",
                         ),
-                        render.WrappedText(
+                    ),
+                    # Row 2: Aircraft type wrapped — 18px tall (up to 3 lines)
+                    render.Box(
+                        width = 46,
+                        height = 18,
+                        child = render.WrappedText(
                             content = type_desc,
                             font = "tom-thumb",
                             width = 46,
                             align = "center",
                         ),
-                        render.Marquee(
+                    ),
+                    # Row 3: Owner marquee — 7px tall, always visible
+                    render.Box(
+                        width = 46,
+                        height = 7,
+                        child = render.Marquee(
                             width = 46,
                             child = render.Text(
                                 content = owner,
                                 font = "tom-thumb",
+                                color = "#AAAAAA",
                             ),
                             scroll_direction = "horizontal",
-                            offset_start = 5,
+                            offset_start = 46,
                         ),
-                    ],
-                    cross_align = "center",
-                    main_align = "center",
-                ),
+                    ),
+                ],
             ),
         ],
         expanded = True,
