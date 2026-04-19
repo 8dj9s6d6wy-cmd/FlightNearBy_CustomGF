@@ -111,7 +111,7 @@ def get_aircraft_icon(category, designator, description, addrtype, color):
     url = (
         "https://tar1090tidbyt.azurewebsites.net/api/aircraft_icon" +
         "?category=%s&typeDesignator=%s&typeDescription=%s&addrtype=%s&color=%s" % (
-            category, designator, description, addrtype, color
+            category, designator, description.replace(" ", "%20"), addrtype, color
         )
     )
     response = http.get(url, ttl_seconds = 86400)
@@ -429,10 +429,6 @@ def main(config):
     icao_type = hexdb_data.get("ICAOTypeCode", "ZZZC") if hexdb_data else "ZZZC"
     owner = hexdb_data.get("RegisteredOwners", "Unknown Owner") if hexdb_data else "Unknown Owner"
 
-    # Apply [MIL] prefix when military aircraft detected
-    if is_mil:
-        owner = "[MIL] " + owner
-
     # Aircraft silhouette icon
     icon_alt = int(alt_baro) if alt_baro != "ground" else 0
     icon_color = get_altitude_icon_color(icon_alt)
@@ -441,7 +437,7 @@ def main(config):
         icon_response = http.get(
             "https://tar1090tidbyt.azurewebsites.net/api/aircraft_icon" +
             "?category=%s&typeDesignator=%s&typeDescription=%s&addrtype=%s&color=%s" % (
-                aircraft["category"], icao_type, type_desc, aircraft.get("type", "adsb_icao"), icon_color
+                aircraft["category"], icao_type, type_desc.replace(" ", "%20"), aircraft.get("type", "adsb_icao"), icon_color
             ),
             ttl_seconds = 86400,
         )
@@ -507,19 +503,21 @@ def main(config):
                     ),
                 ],
             ),
-            # Bottom bar: route / heading / emergency
+            # Bottom bar: route / heading / emergency — centered
             render.Box(
                 width = 64,
                 height = 6,
-                child = render.Marquee(
-                    width = 64,
-                    child = render.Text(
-                        content = bottom_content,
-                        font = "tom-thumb",
-                        color = bottom_color,
-                    ),
-                    scroll_direction = "horizontal",
-                    offset_start = 5,
+                child = render.Column(
+                    children = [
+                        render.Text(
+                            content = bottom_content,
+                            font = "tom-thumb",
+                            color = bottom_color,
+                        ),
+                    ],
+                    main_align = "center",
+                    cross_align = "center",
+                    expanded = True,
                 ),
             ),
         ],
