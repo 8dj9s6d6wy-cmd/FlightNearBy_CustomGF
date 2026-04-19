@@ -549,44 +549,49 @@ def main(config):
                 height = 32,
                 child = render.Image(src = aircraft_icon, height = 18, width = 18),
             ),
-            render.Column(
-                children = [
-                    # Row 1: Registration — 7px tall
-                    render.Box(
-                        width = 46,
-                        height = 7,
-                        child = render.Text(
-                            content = registration,
-                            font = "tom-thumb",
-                        ),
-                    ),
-                    # Row 2: Aircraft type wrapped — 18px tall (up to 3 lines)
-                    render.Box(
-                        width = 46,
-                        height = 18,
-                        child = render.WrappedText(
-                            content = type_desc,
-                            font = "tom-thumb",
+            render.Box(
+                width = 46,
+                height = 32,
+                child = render.Column(
+                    children = [
+                        # Row 1: Registration — 7px tall, centered
+                        render.Box(
                             width = 46,
-                            align = "center",
-                        ),
-                    ),
-                    # Row 3: Owner marquee — 7px tall, always visible
-                    render.Box(
-                        width = 46,
-                        height = 7,
-                        child = render.Marquee(
-                            width = 46,
-                            child = render.Text(
-                                content = owner,
-                                font = "tom-thumb",
-                                color = "#AAAAAA",
+                            height = 7,
+                            child = render.Column(
+                                children = [render.Text(content = registration, font = "tom-thumb")],
+                                cross_align = "center",
+                                expanded = True,
                             ),
-                            scroll_direction = "horizontal",
-                            offset_start = 46,
                         ),
-                    ),
-                ],
+                        # Row 2: Aircraft type wrapped — 18px tall (up to 3 lines)
+                        render.Box(
+                            width = 46,
+                            height = 18,
+                            child = render.WrappedText(
+                                content = type_desc,
+                                font = "tom-thumb",
+                                width = 46,
+                                align = "center",
+                            ),
+                        ),
+                        # Row 3: Owner marquee — 7px tall, always visible
+                        render.Box(
+                            width = 46,
+                            height = 7,
+                            child = render.Marquee(
+                                width = 46,
+                                child = render.Text(
+                                    content = owner,
+                                    font = "tom-thumb",
+                                    color = "#AAAAAA",
+                                ),
+                                scroll_direction = "horizontal",
+                                offset_start = 46,
+                            ),
+                        ),
+                    ],
+                ),
             ),
         ],
         expanded = True,
