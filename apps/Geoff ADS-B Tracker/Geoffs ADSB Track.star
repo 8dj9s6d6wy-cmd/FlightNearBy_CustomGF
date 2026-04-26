@@ -384,21 +384,27 @@ def get_callsign(aircraft):
 
 def split_type_desc(type_desc):
     """
-    Split a type description string into two lines of max 9 chars each
-    for tom-thumb font at 46px width.
+    Split a type description string into two lines for tom-thumb font at 46px.
+    tom-thumb: 4px char + 1px spacing = 5px per char, so 46px fits ~8 chars.
+    Using 7 as safe limit to avoid any clipping.
+    Hard-truncates words longer than the limit.
     Returns (line1, line2).
     """
+    MAX_CHARS = 7
     words = type_desc.split(" ")
     line1 = ""
     line2 = ""
     for word in words:
+        # Hard-truncate any single word that exceeds the limit
+        if len(word) > MAX_CHARS:
+            word = word[:MAX_CHARS]
         if len(line1) == 0:
             line1 = word
-        elif len(line1) + 1 + len(word) <= 9:
+        elif len(line1) + 1 + len(word) <= MAX_CHARS:
             line1 = line1 + " " + word
         elif len(line2) == 0:
             line2 = word
-        elif len(line2) + 1 + len(word) <= 9:
+        elif len(line2) + 1 + len(word) <= MAX_CHARS:
             line2 = line2 + " " + word
     return (line1, line2)
 
@@ -666,47 +672,91 @@ def main(config):
     #  │      KHOU --- 1h 30m --- KBNA   (marquee)                   │
     #  └──────────────────────────────────────────────────────────────┘
 
-    if is_nja:
-        left_children = [
-            render.Image(src = NJA_TAIL.readall(), height = 10),
-            render.Text(content = callsign, font = "tom-thumb"),
-        ]
-    else:
-        left_children = [
-            render.Text(content = "FLIGHT", font = "tom-thumb"),
-            render.Text(content = callsign, font = "tom-thumb"),
-        ]
-
-    right_children = [
-        render.Text(content = alt_display, font = "tom-thumb"),
-        render.Text(content = spd_display, font = "tom-thumb"),
-    ]
-    if dst_display != "":
-        right_children.append(render.Text(content = dst_display, font = "tom-thumb"))
 
     frame1 = render.Column(
         children = [
-            render.Row(
-                children = [
-                    render.Box(
-                        width = 30,
-                        height = 26,
-                        child = render.Column(
-                            children = left_children,
-                            cross_align = "center",
-                            main_align = "center",
+            render.Box(
+                width = 64,
+                height = 26,
+                child = render.Row(
+                    children = [
+                        # Left column: FLIGHT label + callsign
+                        render.Box(
+                            width = 30,
+                            height = 26,
+                            child = render.Column(
+                                children = [
+                                    render.Box(height = 3, width = 30),
+                                    render.Box(
+                                        height = 7,
+                                        width = 30,
+                                        child = render.Text(
+                                            content = "FLIGHT" if not is_nja else "",
+                                            font = "tom-thumb",
+                                        ),
+                                    ),
+                                    render.Box(
+                                        height = 7,
+                                        width = 30,
+                                        child = render.Text(
+                                            content = callsign,
+                                            font = "tom-thumb",
+                                        ),
+                                    ),
+                                ] if not is_nja else [
+                                    render.Box(height = 2, width = 30),
+                                    render.Box(
+                                        height = 10,
+                                        width = 30,
+                                        child = render.Image(src = NJA_TAIL.readall(), height = 10),
+                                    ),
+                                    render.Box(
+                                        height = 7,
+                                        width = 30,
+                                        child = render.Text(
+                                            content = callsign,
+                                            font = "tom-thumb",
+                                        ),
+                                    ),
+                                ],
+                            ),
                         ),
-                    ),
-                    render.Box(
-                        width = 34,
-                        height = 26,
-                        child = render.Column(
-                            children = right_children,
-                            cross_align = "center",
-                            main_align = "center",
+                        # Right column: Alt, Speed, Distance
+                        render.Box(
+                            width = 34,
+                            height = 26,
+                            child = render.Column(
+                                children = [
+                                    render.Box(height = 3, width = 34),
+                                    render.Box(
+                                        height = 7,
+                                        width = 34,
+                                        child = render.Text(
+                                            content = alt_display,
+                                            font = "tom-thumb",
+                                        ),
+                                    ),
+                                    render.Box(
+                                        height = 7,
+                                        width = 34,
+                                        child = render.Text(
+                                            content = spd_display,
+                                            font = "tom-thumb",
+                                        ),
+                                    ),
+                                    render.Box(
+                                        height = 7,
+                                        width = 34,
+                                        child = render.Text(
+                                            content = dst_display,
+                                            font = "tom-thumb",
+                                        ),
+                                    ),
+                                ],
+                            ),
                         ),
-                    ),
-                ],
+                    ],
+                ),
             ),
             # Bottom bar — marquee for long route+time strings
             render.Box(
