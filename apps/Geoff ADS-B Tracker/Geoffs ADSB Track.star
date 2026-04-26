@@ -830,7 +830,6 @@ def get_schema():
                 name = "AeroAPI Key",
                 desc = "Your FlightAware AeroAPI key for flight details.",
                 icon = "key",
-                sensitive = True,
             ),
             schema.Dropdown(
                 id = "units",
