@@ -686,7 +686,7 @@ def main(config):
                             height = 26,
                             child = render.Column(
                                 children = [
-                                    render.Box(height = 3, width = 30),
+                                    render.Box(height = 2, width = 30),
                                     render.Box(
                                         height = 7,
                                         width = 30,
@@ -695,6 +695,7 @@ def main(config):
                                             font = "tom-thumb",
                                         ),
                                     ),
+                                    render.Box(height = 2, width = 30),
                                     render.Box(
                                         height = 7,
                                         width = 30,
