@@ -550,13 +550,12 @@ def main(config):
             type_line2 = type_line2 + " " + word
 
     # ── Frame 2 ───────────────────────────────────────────────────────────────
-    #
-    #  ┌──────────────────────────────────────────────────────────────┐
-    #  │  [icon]  │  N123EJ          (7px)                            │
-    #  │  18px    │  Citation        (6px)                            │
-    #  │          │  Longitude       (6px)                            │
-    #  │          │  ← Owner marquee →  (7px + 6px padding)          │
-    #  └──────────────────────────────────────────────────────────────┘
+    # Total height = 32px
+    # Row 1: Registration  8px
+    # Row 2: Type line 1   8px
+    # Row 3: Type line 2   8px
+    # Row 4: Owner marquee 8px
+    # Total:              32px
 
     frame2 = render.Row(
         children = [
@@ -570,37 +569,33 @@ def main(config):
                 height = 32,
                 child = render.Column(
                     children = [
-                        # Registration
                         render.Box(
                             width = 46,
-                            height = 7,
+                            height = 8,
                             child = render.Text(
                                 content = registration,
                                 font = "tom-thumb",
                             ),
                         ),
-                        # Type line 1
                         render.Box(
                             width = 46,
-                            height = 6,
+                            height = 8,
                             child = render.Text(
                                 content = type_line1,
                                 font = "tom-thumb",
                             ),
                         ),
-                        # Type line 2
                         render.Box(
                             width = 46,
-                            height = 6,
+                            height = 8,
                             child = render.Text(
                                 content = type_line2,
                                 font = "tom-thumb",
                             ),
                         ),
-                        # Owner marquee
                         render.Box(
                             width = 46,
-                            height = 7,
+                            height = 8,
                             child = render.Marquee(
                                 width = 46,
                                 child = render.Text(
@@ -612,8 +607,6 @@ def main(config):
                                 offset_start = 46,
                             ),
                         ),
-                        # Bottom padding
-                        render.Box(width = 46, height = 6),
                     ],
                 ),
             ),
