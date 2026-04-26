@@ -658,190 +658,129 @@ def main(config):
     if aircraft_icon == None:
         aircraft_icon = BLANK_ASSET.readall()
 
-    # ── Type desc split for Frame 2 ───────────────────────────────────────────
-
-    (type_line1, type_line2) = split_type_desc(type_desc)
-
     # ── Frame 1 ───────────────────────────────────────────────────────────────
     #
     #  ┌──────────────────────────────────────────────────────────────┐
-    #  │  [NJA logo]  │  FL380                                        │
-    #  │  or FLIGHT   │  Sp:416  Dst:3  (30px left | 34px right)     │
-    #  │  SWA2269     │                                               │
+    #  │  FLIGHT   FL380                                              │
+    #  │  SWA2269  Sp:416                                             │
+    #  │           Dst:3                                              │
     #  ├──────────────────────────────────────────────────────────────┤
-    #  │      KHOU --- 1h 30m --- KBNA   (marquee)                   │
+    #  │  ← KHOU --- 1h 30m --- KBNA (marquee, centered) →          │
     #  └──────────────────────────────────────────────────────────────┘
 
+    if is_nja:
+        left_col = render.Column(
+            children = [
+                render.Image(src = NJA_TAIL.readall(), height = 10),
+                render.Text(content = callsign, font = "tom-thumb"),
+            ],
+        )
+    else:
+        left_col = render.Column(
+            children = [
+                render.Text(content = "FLIGHT", font = "tom-thumb"),
+                render.Padding(pad = (0, 1, 0, 0)),
+                render.Text(content = callsign, font = "tom-thumb"),
+            ],
+        )
+
+    right_col = render.Column(
+        children = [
+            render.Text(content = alt_display, font = "tom-thumb"),
+            render.Text(content = spd_display, font = "tom-thumb"),
+            render.Text(content = dst_display, font = "tom-thumb"),
+        ],
+    )
 
     frame1 = render.Column(
         children = [
-            render.Box(
-                width = 64,
-                height = 26,
+            render.Padding(
+                pad = (2, 2, 2, 0),
                 child = render.Row(
                     children = [
-                        # Left column: FLIGHT label + callsign
-                        render.Box(
-                            width = 30,
-                            height = 26,
-                            child = render.Column(
-                                children = [
-                                    render.Box(height = 2, width = 30),
-                                    render.Box(
-                                        height = 7,
-                                        width = 30,
-                                        child = render.Text(
-                                            content = "FLIGHT" if not is_nja else "",
-                                            font = "tom-thumb",
-                                        ),
-                                    ),
-                                    render.Box(height = 2, width = 30),
-                                    render.Box(
-                                        height = 7,
-                                        width = 30,
-                                        child = render.Text(
-                                            content = callsign,
-                                            font = "tom-thumb",
-                                        ),
-                                    ),
-                                ] if not is_nja else [
-                                    render.Box(height = 2, width = 30),
-                                    render.Box(
-                                        height = 10,
-                                        width = 30,
-                                        child = render.Image(src = NJA_TAIL.readall(), height = 10),
-                                    ),
-                                    render.Box(
-                                        height = 7,
-                                        width = 30,
-                                        child = render.Text(
-                                            content = callsign,
-                                            font = "tom-thumb",
-                                        ),
-                                    ),
-                                ],
+                        render.Padding(
+                            pad = (0, 0, 4, 0),
+                            child = left_col,
+                        ),
+                        right_col,
+                    ],
+                ),
+            ),
+            # Bottom bar — centered marquee
+            render.Column(
+                children = [
+                    render.Marquee(
+                        width = 64,
+                        child = render.Text(
+                            content = bottom_content,
+                            font = "tom-thumb",
+                            color = bottom_color,
+                        ),
+                        scroll_direction = "horizontal",
+                        offset_start = 64,
+                    ),
+                ],
+                cross_align = "center",
+                expanded = True,
+            ),
+        ],
+    )
+
+    # ── Frame 2 ───────────────────────────────────────────────────────────────
+    #
+    #  ┌──────────────────────────────────────────────────────────────┐
+    #  │  [icon 12x12]  N220RA  King Air                             │
+    #  │                ← RAN (owner marquee) →                      │
+    #  └──────────────────────────────────────────────────────────────┘
+
+    # Combine registration + type onto one scrolling line if they fit,
+    # otherwise marquee the full string
+    reg_type = registration + "  " + type_desc
+
+    frame2 = render.Column(
+        children = [
+            render.Padding(
+                pad = (0, 4, 0, 0),
+                child = render.Row(
+                    children = [
+                        render.Padding(
+                            pad = (0, 0, 4, 0),
+                            child = render.Image(
+                                src = aircraft_icon,
+                                height = 12,
+                                width = 12,
                             ),
                         ),
-                        # Right column: Alt, Speed, Distance
-                        render.Box(
-                            width = 34,
-                            height = 26,
-                            child = render.Column(
-                                children = [
-                                    render.Box(height = 3, width = 34),
-                                    render.Box(
-                                        height = 7,
-                                        width = 34,
-                                        child = render.Text(
-                                            content = alt_display,
-                                            font = "tom-thumb",
-                                        ),
+                        render.Column(
+                            children = [
+                                render.Marquee(
+                                    width = 48,
+                                    child = render.Text(
+                                        content = reg_type,
+                                        font = "tom-thumb",
                                     ),
-                                    render.Box(
-                                        height = 7,
-                                        width = 34,
-                                        child = render.Text(
-                                            content = spd_display,
-                                            font = "tom-thumb",
-                                        ),
-                                    ),
-                                    render.Box(
-                                        height = 7,
-                                        width = 34,
-                                        child = render.Text(
-                                            content = dst_display,
-                                            font = "tom-thumb",
-                                        ),
-                                    ),
-                                ],
-                            ),
+                                    scroll_direction = "horizontal",
+                                    offset_start = 48,
+                                ),
+                            ],
                         ),
                     ],
                 ),
             ),
-            # Bottom bar — marquee for long route+time strings
-            render.Box(
-                width = 64,
-                height = 6,
+            render.Padding(
+                pad = (0, 4, 0, 0),
                 child = render.Marquee(
                     width = 64,
                     child = render.Text(
-                        content = bottom_content,
+                        content = owner,
                         font = "tom-thumb",
-                        color = bottom_color,
+                        color = "#AAAAAA",
                     ),
                     scroll_direction = "horizontal",
                     offset_start = 64,
                 ),
             ),
         ],
-        cross_align = "center",
-    )
-
-    # ── Frame 2 ───────────────────────────────────────────────────────────────
-    #
-    #  ┌──────────────────────────────────────────────────────────────┐
-    #  │  [icon]  │  N8731A           (8px)                           │
-    #  │  18px    │  737-800          (8px)                           │
-    #  │          │  Boeing           (8px)                           │
-    #  │          │  ← Southwest Airlines → (8px marquee)            │
-    #  └──────────────────────────────────────────────────────────────┘
-
-    frame2 = render.Row(
-        children = [
-            render.Box(
-                width = 18,
-                height = 32,
-                child = render.Image(src = aircraft_icon, height = 18, width = 18),
-            ),
-            render.Box(
-                width = 46,
-                height = 32,
-                child = render.Column(
-                    children = [
-                        render.Box(
-                            width = 46,
-                            height = 8,
-                            child = render.Text(
-                                content = registration,
-                                font = "tom-thumb",
-                            ),
-                        ),
-                        render.Box(
-                            width = 46,
-                            height = 8,
-                            child = render.Text(
-                                content = type_line1,
-                                font = "tom-thumb",
-                            ),
-                        ),
-                        render.Box(
-                            width = 46,
-                            height = 8,
-                            child = render.Text(
-                                content = type_line2,
-                                font = "tom-thumb",
-                            ),
-                        ),
-                        render.Box(
-                            width = 46,
-                            height = 8,
-                            child = render.Marquee(
-                                width = 46,
-                                child = render.Text(
-                                    content = owner,
-                                    font = "tom-thumb",
-                                    color = "#AAAAAA",
-                                ),
-                                scroll_direction = "horizontal",
-                                offset_start = 46,
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-        ],
-        expanded = True,
     )
 
     return render.Root(
