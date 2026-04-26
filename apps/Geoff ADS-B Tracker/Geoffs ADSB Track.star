@@ -534,12 +534,28 @@ def main(config):
         cross_align = "center",
     )
 
+    # Split type_desc into two lines manually for fixed-height layout
+    # tom-thumb at 46px wide fits roughly 9 characters per line
+    type_words = type_desc.split(" ")
+    type_line1 = ""
+    type_line2 = ""
+    for word in type_words:
+        if len(type_line1) == 0:
+            type_line1 = word
+        elif len(type_line1) + 1 + len(word) <= 9:
+            type_line1 = type_line1 + " " + word
+        elif len(type_line2) == 0:
+            type_line2 = word
+        elif len(type_line2) + 1 + len(word) <= 9:
+            type_line2 = type_line2 + " " + word
+
     # ── Frame 2 ───────────────────────────────────────────────────────────────
     #
     #  ┌──────────────────────────────────────────────────────────────┐
-    #  │  [icon]  │  N123EJ                                           │
-    #  │  18px    │  Citation Longitude  (tom-thumb wrapped)          │
-    #  │          │  ← NetJets Aviation Inc (marquee) →              │
+    #  │  [icon]  │  N123EJ          (7px)                            │
+    #  │  18px    │  Citation        (6px)                            │
+    #  │          │  Longitude       (6px)                            │
+    #  │          │  ← Owner marquee →  (7px + 6px padding)          │
     #  └──────────────────────────────────────────────────────────────┘
 
     frame2 = render.Row(
@@ -554,28 +570,34 @@ def main(config):
                 height = 32,
                 child = render.Column(
                     children = [
-                        # Row 1: Registration — 7px tall, centered
+                        # Registration
                         render.Box(
                             width = 46,
                             height = 7,
-                            child = render.Column(
-                                children = [render.Text(content = registration, font = "tom-thumb")],
-                                cross_align = "center",
-                                expanded = True,
+                            child = render.Text(
+                                content = registration,
+                                font = "tom-thumb",
                             ),
                         ),
-                        # Row 2: Aircraft type wrapped — 18px tall (up to 3 lines)
+                        # Type line 1
                         render.Box(
                             width = 46,
-                            height = 18,
-                            child = render.WrappedText(
-                                content = type_desc,
+                            height = 6,
+                            child = render.Text(
+                                content = type_line1,
                                 font = "tom-thumb",
-                                width = 46,
-                                align = "center",
                             ),
                         ),
-                        # Row 3: Owner marquee — 7px tall, always visible
+                        # Type line 2
+                        render.Box(
+                            width = 46,
+                            height = 6,
+                            child = render.Text(
+                                content = type_line2,
+                                font = "tom-thumb",
+                            ),
+                        ),
+                        # Owner marquee
                         render.Box(
                             width = 46,
                             height = 7,
@@ -590,6 +612,8 @@ def main(config):
                                 offset_start = 46,
                             ),
                         ),
+                        # Bottom padding
+                        render.Box(width = 46, height = 6),
                     ],
                 ),
             ),
