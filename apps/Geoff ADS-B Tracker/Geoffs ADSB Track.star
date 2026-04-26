@@ -679,7 +679,7 @@ def main(config):
         left_col = render.Column(
             children = [
                 render.Text(content = "FLIGHT", font = "tom-thumb"),
-                render.Padding(pad = (0, 1, 0, 0)),
+                render.Padding(pad = (0, 1, 0, 0), child = render.Row()),
                 render.Text(content = callsign, font = "tom-thumb"),
             ],
         )
