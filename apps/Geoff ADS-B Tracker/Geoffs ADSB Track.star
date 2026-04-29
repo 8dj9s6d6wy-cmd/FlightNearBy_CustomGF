@@ -678,8 +678,8 @@ def main(config):
     else:
         left_col = render.Column(
             children = [
-                render.Text(content = "Flight", font = "tom-thumb"),
-                render.Box(height=4),
+                render.Text(content = "FLIGHT", font = "tom-thumb"),
+                render.Box(width = 1, height = 2),
                 render.Text(content = callsign, font = "tom-thumb"),
             ],
         )
