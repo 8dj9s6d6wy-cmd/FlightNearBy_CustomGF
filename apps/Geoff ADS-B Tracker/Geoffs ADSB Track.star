@@ -692,36 +692,44 @@ def main(config):
         ],
     )
 
-    frame1 = render.Column(
+    frame1 = render.Stack(
         children = [
-            render.Padding(
-                pad = (2, 2, 2, 0),
-                child = render.Row(
-                    children = [
-                        render.Padding(
-                            pad = (0, 0, 4, 0),
-                            child = left_col,
-                        ),
-                        right_col,
-                    ],
-                ),
-            ),
-            # Bottom bar — centered marquee
+            # Top content: flight info
             render.Column(
                 children = [
-                    render.Marquee(
-                        width = 64,
-                        child = render.Text(
-                            content = bottom_content,
-                            font = "tom-thumb",
-                            color = bottom_color,
+                    render.Padding(
+                        pad = (2, 3, 2, 0),
+                        child = render.Row(
+                            children = [
+                                render.Padding(
+                                    pad = (0, 0, 6, 0),
+                                    child = left_col,
+                                ),
+                                right_col,
+                            ],
                         ),
-                        scroll_direction = "horizontal",
-                        offset_start = 64,
                     ),
                 ],
-                cross_align = "center",
-                expanded = True,
+            ),
+            # Bottom bar pinned to very bottom of 32px display
+            render.Column(
+                children = [
+                    render.Box(width = 64, height = 26),
+                    render.Box(
+                        width = 64,
+                        height = 6,
+                        child = render.Marquee(
+                            width = 64,
+                            child = render.Text(
+                                content = bottom_content,
+                                font = "tom-thumb",
+                                color = bottom_color,
+                            ),
+                            scroll_direction = "horizontal",
+                            offset_start = 64,
+                        ),
+                    ),
+                ],
             ),
         ],
     )
