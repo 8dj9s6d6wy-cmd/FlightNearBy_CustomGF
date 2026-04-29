@@ -718,7 +718,17 @@ def main(config):
                     render.Box(
                         width = 64,
                         height = 6,
-                        child = render.Marquee(
+                        child = render.Column(
+                            children = [
+                                render.Text(
+                                    content = bottom_content,
+                                    font = "tom-thumb",
+                                    color = bottom_color,
+                                ),
+                            ],
+                            cross_align = "center",
+                            expanded = True,
+                        ) if len(bottom_content) <= 10 else render.Marquee(
                             width = 64,
                             child = render.Text(
                                 content = bottom_content,
