@@ -747,56 +747,59 @@ def main(config):
     # ── Frame 2 ───────────────────────────────────────────────────────────────
     #
     #  ┌──────────────────────────────────────────────────────────────┐
-    #  │  [icon 12x12]  N220RA  King Air                             │
-    #  │                ← RAN (owner marquee) →                      │
+    #  │  [icon]  N8731A  Boeing 737-800                              │
+    #  │          ← Southwest Airlines (owner marquee) →             │
     #  └──────────────────────────────────────────────────────────────┘
 
-    # Combine registration + type onto one scrolling line if they fit,
-    # otherwise marquee the full string
     reg_type = registration + "  " + type_desc
 
-    frame2 = render.Column(
+    frame2 = render.Stack(
         children = [
-            render.Padding(
-                pad = (0, 4, 0, 0),
-                child = render.Row(
-                    children = [
-                        render.Padding(
-                            pad = (0, 0, 4, 0),
-                            child = render.Image(
+            # Row 1: icon + reg/type marquee, pinned to top
+            render.Column(
+                children = [
+                    render.Box(height = 4, width = 64),
+                    render.Row(
+                        children = [
+                            render.Box(width = 2, height = 12),
+                            render.Image(
                                 src = aircraft_icon,
                                 height = 12,
                                 width = 12,
                             ),
-                        ),
-                        render.Column(
-                            children = [
-                                render.Marquee(
-                                    width = 48,
-                                    child = render.Text(
-                                        content = reg_type,
-                                        font = "tom-thumb",
-                                    ),
-                                    scroll_direction = "horizontal",
-                                    offset_start = 48,
+                            render.Box(width = 2, height = 12),
+                            render.Marquee(
+                                width = 48,
+                                child = render.Text(
+                                    content = reg_type,
+                                    font = "tom-thumb",
                                 ),
-                            ],
-                        ),
-                    ],
-                ),
-            ),
-            render.Padding(
-                pad = (0, 4, 0, 0),
-                child = render.Marquee(
-                    width = 64,
-                    child = render.Text(
-                        content = owner,
-                        font = "tom-thumb",
-                        color = "#AAAAAA",
+                                scroll_direction = "horizontal",
+                                offset_start = 48,
+                            ),
+                        ],
                     ),
-                    scroll_direction = "horizontal",
-                    offset_start = 64,
-                ),
+                ],
+            ),
+            # Row 2: owner marquee pinned to bottom
+            render.Column(
+                children = [
+                    render.Box(height = 22, width = 64),
+                    render.Box(
+                        width = 64,
+                        height = 6,
+                        child = render.Marquee(
+                            width = 64,
+                            child = render.Text(
+                                content = owner,
+                                font = "tom-thumb",
+                                color = "#AAAAAA",
+                            ),
+                            scroll_direction = "horizontal",
+                            offset_start = 64,
+                        ),
+                    ),
+                ],
             ),
         ],
     )
