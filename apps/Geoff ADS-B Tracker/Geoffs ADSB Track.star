@@ -632,55 +632,18 @@ def main(config):
 
     reg_type_str = registration + "  " + type_desc
 
-    frame2 = render.Stack(
+    frame2 = render.Row(
         children = [
-            # Background
-            render.Box(width = 64, height = 32),
-
-            # Icon + reg/type row
+            render.Image(src = aircraft_icon, height = 18, width = 18),
             render.Column(
                 children = [
-                    render.Box(width = 1, height = 4),
-                    render.Row(
-                        children = [
-                            render.Box(width = 2, height = 1),
-                            render.Image(
-                                src = aircraft_icon,
-                                height = 12,
-                                width = 12,
-                            ),
-                            render.Box(width = 3, height = 1),
-                            render.Marquee(
-                                width = 47,
-                                child = render.Text(
-                                    content = reg_type_str,
-                                    font = "tom-thumb",
-                                ),
-                                scroll_direction = "horizontal",
-                                offset_start = 47,
-                            ),
-                        ],
-                    ),
-                ],
-            ),
-
-            # Owner marquee row — pinned to row 22
-            render.Column(
-                children = [
-                    render.Box(width = 64, height = 22),
-                    render.Box(
-                        width = 64,
-                        height = 6,
-                        child = render.Marquee(
-                            width = 64,
-                            child = render.Text(
-                                content = owner,
-                                font = "tom-thumb",
-                                color = "#AAAAAA",
-                            ),
-                            scroll_direction = "horizontal",
-                            offset_start = 64,
-                        ),
+                    render.Text(content = registration, font = "tom-thumb"),
+                    render.Text(content = type_desc, font = "tom-thumb"),
+                    render.Marquee(
+                        width = 46,
+                        child = render.Text(content = owner, font = "tom-thumb", color = "#AAAAAA"),
+                        scroll_direction = "horizontal",
+                        offset_start = 46,
                     ),
                 ],
             ),
