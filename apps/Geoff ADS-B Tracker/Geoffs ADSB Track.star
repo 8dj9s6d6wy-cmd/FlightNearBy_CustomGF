@@ -550,6 +550,9 @@ def main(config):
     #
     #  Right col (rows 2-24, stacked naturally):
     #    FL380  Sp:416  Dst:3  each 6px + 2px gap
+    
+    print("STATUS:", aero_flight.get("status", "NONE"))
+    print("ETA:", aero_flight.get("estimated_arrival_time", "NONE"))
 
     if is_nja:
         label_widget = render.Image(src = NJA_TAIL.readall(), height = 10)
