@@ -633,19 +633,28 @@ def main(config):
     reg_type_str = registration + "  " + type_desc
 
     frame2 = render.Row(
+        expanded = True,
         children = [
-            render.Image(src = aircraft_icon, height = 18, width = 18),
-            render.Column(
-                children = [
-                    render.Text(content = registration, font = "tom-thumb"),
-                    render.Text(content = type_desc, font = "tom-thumb"),
-                    render.Marquee(
-                        width = 46,
-                        child = render.Text(content = owner, font = "tom-thumb", color = "#AAAAAA"),
-                        scroll_direction = "horizontal",
-                        offset_start = 46,
-                    ),
-                ],
+            render.Box(
+                width = 21,
+                height = 32,
+                child = render.Image(src = aircraft_icon, height = 18, width = 18),
+            ),
+            render.Box(
+                width = 43,
+                height = 32,
+                child = render.Column(
+                    children = [
+                        render.Text(content = registration, font = "tom-thumb"),
+                        render.Text(content = type_desc, font = "tom-thumb"),
+                        render.Marquee(
+                            width = 43,
+                            child = render.Text(content = owner, font = "tom-thumb", color = "#AAAAAA"),
+                            scroll_direction = "horizontal",
+                            offset_start = 43,
+                        ),
+                    ],
+                ),
             ),
         ],
     )
