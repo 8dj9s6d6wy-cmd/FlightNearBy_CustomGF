@@ -20,7 +20,6 @@ PIAWARE_URL_DEFAULT = "SET YOUR URL"
 AEROAPI_BASE_URL = "https://aeroapi.flightaware.com/aeroapi"
 
 DEFAULT_CONVERSION_UNITS = "a"
-DISPLAY_TIMEZONE = "America/New_York"
 
 FEET_TO_METERS_RATIO = 0.3048
 NMI_TO_KM_RATIO = 1.8520
@@ -34,7 +33,6 @@ EMERGENCY_SQUAWKS = {
 
 COMPASS_DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 
-# Keywords used to identify military-owned aircraft from RegisteredOwners field
 MIL_KEYWORDS = [
     "army",
     "air force",
@@ -51,36 +49,21 @@ MIL_KEYWORDS = [
 # ── AeroAPI helpers ───────────────────────────────────────────────────────────
 
 def lookup_aeroapi_flight(callsign, api_key):
-    """
-    Fetch the most recent flight record for a callsign from AeroAPI.
-    Returns the first flight dict or None.
-    Cached 5 minutes to avoid burning quota.
-    """
     if len(callsign) == 0 or api_key == "" or api_key == None:
         return None
-
     url = "%s/flights/%s" % (AEROAPI_BASE_URL, callsign)
     headers = {"x-apikey": api_key}
     response = http.get(url, headers = headers, ttl_seconds = 300)
-
     if response.status_code != 200:
         print("AeroAPI flight lookup failed for %s: %d" % (callsign, response.status_code))
         return None
-
     data = response.json()
     flights = data.get("flights", [])
     if len(flights) == 0:
         return None
-
-    # Return the most recent flight (first in list)
     return flights[0]
 
 def lookup_hexdb_aircraft(icao):
-    """
-    Fetch aircraft record from hexdb.io by ICAO hex.
-    Used as fallback when no callsign or AeroAPI miss.
-    Cached 24 hours.
-    """
     url = "https://hexdb.io/api/v1/aircraft/%s" % icao.upper()
     response = http.get(url, ttl_seconds = 86400)
     if response.status_code != 200:
@@ -93,60 +76,35 @@ def lookup_hexdb_aircraft(icao):
 # ── Time helpers ──────────────────────────────────────────────────────────────
 
 def parse_iso_time(iso_str):
-    """
-    Parse an ISO 8601 timestamp string returned by AeroAPI.
-    AeroAPI returns strings like: '2024-04-19T14:30:00Z'
-    Returns a time.Time object or None.
-    """
     if iso_str == None or iso_str == "":
         return None
     t = time.parse_time(iso_str, format = "2006-01-02T15:04:05Z", location = "UTC")
     return t
 
 def format_time_remaining(estimated_arrival_str):
-    """
-    Given an ISO arrival time string, return a human-readable time remaining string.
-    e.g. '1h 30m' or '45m' or None if can't compute.
-    """
     if estimated_arrival_str == None or estimated_arrival_str == "":
         return None
-
     arrival = parse_iso_time(estimated_arrival_str)
     if arrival == None:
         return None
-
     now = time.now()
     diff = arrival - now
-
-    # Duration.seconds gives total seconds as integer
     total_seconds = diff.seconds
     total_minutes = int(total_seconds / 60)
-
     if total_minutes <= 0:
         return None
-
     hours = int(total_minutes / 60)
     minutes = total_minutes % 60
-
     if hours > 0:
         return "%dh %dm" % (hours, minutes)
     else:
         return "%dm" % minutes
 
 def build_bottom_bar(aircraft, aero_flight, is_emergency):
-    """
-    Build the bottom bar content and color for Frame 1.
-    Priority: emergency > flight route+time > heading fallback
-    """
-    # Emergency always wins
     if is_emergency:
         squawk = aircraft["squawk"]
-        return (
-            "%s: %s" % (squawk, EMERGENCY_SQUAWKS[squawk]),
-            "#FF0000",
-        )
+        return ("%s: %s" % (squawk, EMERGENCY_SQUAWKS[squawk]), "#FF0000")
 
-    # Try to build route string from AeroAPI data
     if aero_flight != None:
         origin = aero_flight.get("origin", None)
         dest = aero_flight.get("destination", None)
@@ -165,53 +123,31 @@ def build_bottom_bar(aircraft, aero_flight, is_emergency):
                 dest_code = dest.get("code", None)
 
         if origin_code != None and dest_code != None:
-            # Determine display based on flight status
             status_lower = status.lower()
-
             if "land" in status_lower:
-                return ("%s > %s  LANDED" % (origin_code, dest_code), "#AAAAAA")
-
+                return ("%s > %s LANDED" % (origin_code, dest_code), "#AAAAAA")
             elif "scheduled" in status_lower or "filed" in status_lower:
                 return ("%s > %s" % (origin_code, dest_code), "#FFFFFF")
-
             else:
-                # En route — try to show time remaining
                 estimated_arrival = aero_flight.get("estimated_arrival_time", None)
                 if estimated_arrival == None:
                     estimated_arrival = aero_flight.get("scheduled_arrival_time", None)
-
                 time_remaining = format_time_remaining(estimated_arrival)
-
                 if time_remaining != None:
-                    content = "%s --- %s --- %s" % (origin_code, time_remaining, dest_code)
+                    return ("%s --- %s --- %s" % (origin_code, time_remaining, dest_code), "#FFFFFF")
                 else:
-                    content = "%s > %s" % (origin_code, dest_code)
+                    return ("%s > %s" % (origin_code, dest_code), "#FFFFFF")
 
-                return (content, "#FFFFFF")
-
-    # Fallback: compass heading from tar1090 track
     compass = track_to_compass(aircraft.get("track", 0))
     return ("HDG: %s" % compass, "#AAAAAA")
 
-# ── Aircraft classification helpers ──────────────────────────────────────────
-
-def is_military_aircraft(owner):
-    """Detect military aircraft by checking owner string for known keywords."""
-    if owner == None:
-        return False
-    owner_lower = owner.lower()
-    for kw in MIL_KEYWORDS:
-        if kw in owner_lower:
-            return True
-    return False
+# ── Aircraft helpers ──────────────────────────────────────────────────────────
 
 def track_to_compass(track):
-    """Convert a track/heading in degrees to an 8-point compass string."""
     idx = int((track + 22.5) / 45) % 8
     return COMPASS_DIRS[idx]
 
 def get_alt_display(conversion_unit, alt_baro):
-    """Return altitude as FL notation or meters for metric."""
     if alt_baro == "ground":
         return "GND"
     alt = int(alt_baro)
@@ -221,17 +157,11 @@ def get_alt_display(conversion_unit, alt_baro):
         return "%dm" % int(alt * FEET_TO_METERS_RATIO)
     return "FL%d" % int(alt / 100)
 
-# ── Aircraft icon helper ──────────────────────────────────────────────────────
-
 def get_aircraft_icon(category, designator, description, addrtype, color):
     url = (
         "https://tar1090tidbyt.azurewebsites.net/api/aircraft_icon" +
         "?category=%s&typeDesignator=%s&typeDescription=%s&addrtype=%s&color=%s" % (
-            category,
-            designator,
-            description.replace(" ", "%20"),
-            addrtype,
-            color,
+            category, designator, description.replace(" ", "%20"), addrtype, color,
         )
     )
     response = http.get(url, ttl_seconds = 86400)
@@ -352,15 +282,12 @@ def aircraft_distance_sort(aircraft, priority_distance, use_custom_coords, custo
         distance = aircraft["r_dst"]
     else:
         distance = 10000
-
     is_emergency = "squawk" in aircraft and aircraft["squawk"] in EMERGENCY_SQUAWKS
-
     is_priority = False
     if "flight" in aircraft:
         callsign = aircraft["flight"].strip().upper()
         if (callsign.startswith("EJA") or callsign.startswith("EJM")) and distance <= priority_distance:
             is_priority = True
-
     return (not is_emergency, not is_priority, distance)
 
 def find_nearest_aircraft(aircrafts, priority_distance, use_custom_coords, custom_lat, custom_lon):
@@ -379,34 +306,6 @@ def get_callsign(aircraft):
     if "flight" in aircraft:
         return aircraft["flight"].strip()
     return ""
-
-# ── Type description word splitter ───────────────────────────────────────────
-
-def split_type_desc(type_desc):
-    """
-    Split a type description string into two lines for tom-thumb font at 46px.
-    tom-thumb: 4px char + 1px spacing = 5px per char, so 46px fits ~8 chars.
-    Using 7 as safe limit to avoid any clipping.
-    Hard-truncates words longer than the limit.
-    Returns (line1, line2).
-    """
-    MAX_CHARS = 7
-    words = type_desc.split(" ")
-    line1 = ""
-    line2 = ""
-    for word in words:
-        # Hard-truncate any single word that exceeds the limit
-        if len(word) > MAX_CHARS:
-            word = word[:MAX_CHARS]
-        if len(line1) == 0:
-            line1 = word
-        elif len(line1) + 1 + len(word) <= MAX_CHARS:
-            line1 = line1 + " " + word
-        elif len(line2) == 0:
-            line2 = word
-        elif len(line2) + 1 + len(word) <= MAX_CHARS:
-            line2 = line2 + " " + word
-    return (line1, line2)
 
 # ── Dummy data ────────────────────────────────────────────────────────────────
 
@@ -481,7 +380,6 @@ def generate_dummy_aero_flight():
         },
         "operator": "Southwest Airlines",
         "aircraft_type": "B737",
-        "scheduled_departure_time": "2024-04-19T18:00:00Z",
         "scheduled_arrival_time": "2024-04-19T21:30:00Z",
         "estimated_arrival_time": "2024-04-19T21:25:00Z",
         "actual_departure_time": "2024-04-19T18:05:00Z",
@@ -539,12 +437,10 @@ def main(config):
 
     if dummy_mode != "none":
         dummy_list = generate_dummy_aircraft()
-
         if dummy_mode == "commercial":
             aircraft = dummy_list[0]
             aero_flight = generate_dummy_aero_flight()
             hexdb_data = generate_dummy_hexdb()
-
         elif dummy_mode == "netjets":
             aircraft = dummy_list[1]
             aero_flight = None
@@ -556,7 +452,6 @@ def main(config):
                 "RegisteredOwners": "NetJets Aviation Inc",
                 "ModeS": "A12345",
             }
-
         elif dummy_mode == "military":
             aircraft = dummy_list[2]
             aero_flight = None
@@ -568,35 +463,26 @@ def main(config):
                 "RegisteredOwners": "United States Army",
                 "ModeS": "AE5D9B",
             }
-
         else:
             return show_error("INVALID DUMMY MODE")
 
     else:
-        # Live mode
         if piaware_url == PIAWARE_URL_DEFAULT or not validate_url(piaware_url):
             return show_error("INVALID PIAWARE URL")
-
         response = http.get(piaware_url + "/data/aircraft.json")
         if response.status_code != 200:
             return show_error("CAN'T REACH PIAWARE @ " + piaware_url)
-
         aircrafts = response.json().get("aircraft", [])
         if len(aircrafts) == 0:
             return show_error("NO AIRCRAFT IN RANGE")
-
         aircraft = find_nearest_aircraft(
             aircrafts, priority_distance, use_custom_coords, custom_lat, custom_lon
         )
         if aircraft == None:
             return show_error("NO AIRCRAFT WITH POSITION DATA")
-
-        # AeroAPI lookup if we have a callsign and key
         callsign_raw = get_callsign(aircraft)
         if len(callsign_raw) > 0 and len(api_key) > 0:
             aero_flight = lookup_aeroapi_flight(callsign_raw, api_key)
-
-        # hexdb fallback for aircraft details (always try)
         hexdb_data = lookup_hexdb_aircraft(aircraft["hex"])
 
     # ── Resolve display data ──────────────────────────────────────────────────
@@ -610,7 +496,6 @@ def main(config):
 
     alt_baro = aircraft.get("alt_baro", 0)
     alt_display = get_alt_display(conversion_unit, alt_baro)
-
     spd = int(convert_spd(conversion_unit, aircraft.get("gs", 0)))
     spd_display = "Sp:%d" % spd
 
@@ -622,27 +507,23 @@ def main(config):
     else:
         dst_display = ""
 
-    # Bottom bar
     (bottom_content, bottom_color) = build_bottom_bar(aircraft, aero_flight, is_emergency)
 
-    # Aircraft details — prefer AeroAPI operator, fall back to hexdb
     registration = "N/A"
-    type_desc = "Unknown Type"
+    type_desc = "Unknown"
     icao_type = "ZZZC"
     owner = "Unknown"
 
     if hexdb_data != None:
         registration = hexdb_data.get("Registration", "N/A")
-        type_desc = hexdb_data.get("Type", "Unknown Type")
+        type_desc = hexdb_data.get("Type", "Unknown")
         icao_type = hexdb_data.get("ICAOTypeCode", "ZZZC")
         owner = hexdb_data.get("RegisteredOwners", "Unknown")
 
-    # AeroAPI operator overrides hexdb owner if available
     if aero_flight != None:
         aero_operator = aero_flight.get("operator", None)
         if aero_operator != None and len(aero_operator) > 0:
             owner = aero_operator
-        # AeroAPI aircraft_type can fill in icao_type if hexdb missed
         if icao_type == "ZZZC":
             aero_type = aero_flight.get("aircraft_type", None)
             if aero_type != None:
@@ -653,65 +534,61 @@ def main(config):
     icon_alt = int(alt_baro) if alt_baro != "ground" else 0
     icon_color = get_altitude_icon_color(icon_alt)
     addrtype = aircraft.get("type", "adsb_icao")
-
     aircraft_icon = get_aircraft_icon(aircraft["category"], icao_type, type_desc, addrtype, icon_color)
     if aircraft_icon == None:
         aircraft_icon = BLANK_ASSET.readall()
 
     # ── Frame 1 ───────────────────────────────────────────────────────────────
     #
-    #  ┌──────────────────────────────────────────────────────────────┐
-    #  │  FLIGHT   FL380                                              │
-    #  │  SWA2269  Sp:416                                             │
-    #  │           Dst:3                                              │
-    #  ├──────────────────────────────────────────────────────────────┤
-    #  │  ← KHOU --- 1h 30m --- KBNA (marquee, centered) →          │
-    #  └──────────────────────────────────────────────────────────────┘
+    #  Pixel layout (32px total height):
+    #  Row  0- 1: blank top padding (2px)
+    #  Row  2- 7: FLIGHT label / NJA logo (6px)
+    #  Row  8- 9: gap (2px)
+    #  Row 10-15: callsign (6px)
+    #  Row 16-25: blank middle (10px)  — right col uses rows 2-25
+    #  Row 26-31: bottom bar (6px)
+    #
+    #  Right col (rows 2-24, stacked naturally):
+    #    FL380  Sp:416  Dst:3  each 6px + 2px gap
 
     if is_nja:
-        left_col = render.Column(
-            children = [
-                render.Image(src = NJA_TAIL.readall(), height = 10),
-                render.Text(content = callsign, font = "tom-thumb"),
-            ],
-        )
+        label_widget = render.Image(src = NJA_TAIL.readall(), height = 10)
     else:
-        left_col = render.Column(
-            children = [
-                render.Text(content = "FLIGHT", font = "tom-thumb"),
-                render.Box(width = 1, height = 2),
-                render.Text(content = callsign, font = "tom-thumb"),
-            ],
-        )
-
-    right_col = render.Column(
-        children = [
-            render.Text(content = alt_display, font = "tom-thumb"),
-            render.Text(content = spd_display, font = "tom-thumb"),
-            render.Text(content = dst_display, font = "tom-thumb"),
-        ],
-    )
+        label_widget = render.Text(content = "FLIGHT", font = "tom-thumb")
 
     frame1 = render.Stack(
         children = [
-            # Top content: flight info
+            # Background — establishes full 64x32 canvas
+            render.Box(width = 64, height = 32),
+
+            # Left column: label + callsign
             render.Column(
                 children = [
-                    render.Padding(
-                        pad = (2, 3, 2, 0),
-                        child = render.Row(
-                            children = [
-                                render.Padding(
-                                    pad = (0, 0, 6, 0),
-                                    child = left_col,
-                                ),
-                                right_col,
-                            ],
-                        ),
+                    render.Box(width = 1, height = 3),
+                    label_widget,
+                    render.Box(width = 1, height = 2),
+                    render.Text(content = callsign, font = "tom-thumb"),
+                ],
+            ),
+
+            # Right column: alt, speed, dst — offset right using a Row with blank spacer
+            render.Row(
+                children = [
+                    render.Box(width = 34, height = 1),
+                    render.Column(
+                        children = [
+                            render.Box(width = 1, height = 3),
+                            render.Text(content = alt_display, font = "tom-thumb"),
+                            render.Box(width = 1, height = 2),
+                            render.Text(content = spd_display, font = "tom-thumb"),
+                            render.Box(width = 1, height = 2),
+                            render.Text(content = dst_display, font = "tom-thumb"),
+                        ],
                     ),
                 ],
             ),
-            # Bottom bar pinned to very bottom of 32px display
+
+            # Bottom bar: pinned to rows 26-31
             render.Column(
                 children = [
                     render.Box(width = 64, height = 26),
@@ -728,7 +605,7 @@ def main(config):
                             ],
                             cross_align = "center",
                             expanded = True,
-                        ) if len(bottom_content) <= 10 else render.Marquee(
+                        ) if len(bottom_content) <= 12 else render.Marquee(
                             width = 64,
                             child = render.Text(
                                 content = bottom_content,
@@ -746,45 +623,51 @@ def main(config):
 
     # ── Frame 2 ───────────────────────────────────────────────────────────────
     #
-    #  ┌──────────────────────────────────────────────────────────────┐
-    #  │  [icon]  N8731A  Boeing 737-800                              │
-    #  │          ← Southwest Airlines (owner marquee) →             │
-    #  └──────────────────────────────────────────────────────────────┘
+    #  Pixel layout (32px total height):
+    #  Row  0- 3: blank top padding (4px)
+    #  Row  4-15: icon (12px) + reg/type marquee side by side
+    #  Row 16-21: blank gap (6px)
+    #  Row 22-27: owner marquee (6px)
+    #  Row 28-31: blank bottom padding (4px)
 
-    reg_type = registration + "  " + type_desc
+    reg_type_str = registration + "  " + type_desc
 
     frame2 = render.Stack(
         children = [
-            # Row 1: icon + reg/type marquee, pinned to top
+            # Background
+            render.Box(width = 64, height = 32),
+
+            # Icon + reg/type row
             render.Column(
                 children = [
-                    render.Box(height = 4, width = 64),
+                    render.Box(width = 1, height = 4),
                     render.Row(
                         children = [
-                            render.Box(width = 2, height = 12),
+                            render.Box(width = 2, height = 1),
                             render.Image(
                                 src = aircraft_icon,
                                 height = 12,
                                 width = 12,
                             ),
-                            render.Box(width = 2, height = 12),
+                            render.Box(width = 3, height = 1),
                             render.Marquee(
-                                width = 48,
+                                width = 47,
                                 child = render.Text(
-                                    content = reg_type,
+                                    content = reg_type_str,
                                     font = "tom-thumb",
                                 ),
                                 scroll_direction = "horizontal",
-                                offset_start = 48,
+                                offset_start = 47,
                             ),
                         ],
                     ),
                 ],
             ),
-            # Row 2: owner marquee pinned to bottom
+
+            # Owner marquee row — pinned to row 22
             render.Column(
                 children = [
-                    render.Box(height = 22, width = 64),
+                    render.Box(width = 64, height = 22),
                     render.Box(
                         width = 64,
                         height = 6,
@@ -819,14 +702,12 @@ def get_schema():
         schema.Option(display = "Imperial (mph / ft / mi)", value = "i"),
         schema.Option(display = "Metric (km/h / m / km)", value = "m"),
     ]
-
     dummy_options = [
         schema.Option(display = "None (Use Live Data)", value = "none"),
         schema.Option(display = "Commercial — SWA2269 @ FL380", value = "commercial"),
         schema.Option(display = "NetJets — EJA456 @ FL410", value = "netjets"),
         schema.Option(display = "Military — Army UH-60 (Emergency)", value = "military"),
     ]
-
     return schema.Schema(
         version = "1",
         fields = [
