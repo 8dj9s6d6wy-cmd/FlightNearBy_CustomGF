@@ -51,7 +51,7 @@ MIL_KEYWORDS = [
 def lookup_aeroapi_flight(callsign, api_key):
     if len(callsign) == 0 or api_key == "" or api_key == None:
         return None
-    url = "%s/flights/%s" % (AEROAPI_BASE_URL, callsign)
+    url = "%s/flights/%s" % (AEROAPI_BASE_URL, callsign.upper())
     headers = {"x-apikey": api_key}
     response = http.get(url, headers = headers, ttl_seconds = 300)
     if response.status_code != 200:
@@ -445,7 +445,7 @@ def main(config):
             aircraft = dummy_list[1]
             aero_flight = None
             hexdb_data = {
-                "Registration": "N123EJ",
+                "Registration": "N123QS",
                 "ICAOTypeCode": "C700",
                 "Manufacturer": "Cessna",
                 "Type": "Citation Longitude",
@@ -550,10 +550,10 @@ def main(config):
     #
     #  Right col (rows 2-24, stacked naturally):
     #    FL380  Sp:416  Dst:3  each 6px + 2px gap
-    
+
     print("STATUS:", aero_flight.get("status", "NONE"))
     print("ETA:", aero_flight.get("estimated_arrival_time", "NONE"))
-
+    
     if is_nja:
         label_widget = render.Image(src = NJA_TAIL.readall(), height = 10)
     else:
