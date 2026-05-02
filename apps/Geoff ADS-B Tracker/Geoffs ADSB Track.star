@@ -59,8 +59,9 @@ def lookup_aeroapi_flight(callsign, api_key):
         return None
     data = response.json()
     flights = data.get("flights", [])
-    if len(flights) == 0:
-        return None
+    for flight in flights:
+        if flight.get("status", "") == "En Route":
+         return flight
     return flights[0]
 
 def lookup_hexdb_aircraft(icao):
@@ -129,9 +130,9 @@ def build_bottom_bar(aircraft, aero_flight, is_emergency):
             elif "scheduled" in status_lower or "filed" in status_lower:
                 return ("%s > %s" % (origin_code, dest_code), "#FFFFFF")
             else:
-                estimated_arrival = aero_flight.get("estimated_arrival_time", None)
+                estimated_arrival = aero_flight.get("estimated_on", None)
                 if estimated_arrival == None:
-                    estimated_arrival = aero_flight.get("scheduled_arrival_time", None)
+                    estimated_arrival = aero_flight.get("scheduled_on", None)
                 time_remaining = format_time_remaining(estimated_arrival)
                 if time_remaining != None:
                     return ("%s --- %s --- %s" % (origin_code, time_remaining, dest_code), "#FFFFFF")
