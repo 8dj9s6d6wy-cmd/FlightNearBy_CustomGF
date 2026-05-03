@@ -558,7 +558,7 @@ def main(config):
     if is_nja:
         label_widget = render.Image(src = NJA_TAIL.readall(), height = 10)
     else:
-        label_widget = render.Text(content = "flight", font = "tom-thumb")
+        label_widget = render.Text(content = "Flight", font = "tom-thumb")
 
     frame1 = render.Stack(
         children = [
