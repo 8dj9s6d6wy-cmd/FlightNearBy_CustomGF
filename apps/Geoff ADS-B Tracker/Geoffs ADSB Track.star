@@ -644,6 +644,9 @@ def main(config):
                 width = 43,
                 height = 32,
                 child = render.Column(
+                    expanded = True,
+                    main_align = "center",
+                    cross_align = "center",
                     children = [
                         render.Text(content = registration, font = "tom-thumb"),
                         render.Text(content = aircraft_type, font = "tom-thumb"),
@@ -658,7 +661,6 @@ def main(config):
                             offset_start = 43,
                         ),
                     ],
-                    cross_align = "center",
                 ),
             ),
         ],
