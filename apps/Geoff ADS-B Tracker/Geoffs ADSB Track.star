@@ -78,6 +78,25 @@ def get_display_ident(flight):
         return ident_icao
     return flight.get("ident", "")
 
+def get_codeshare_operator_icao(flight):
+    """If the flight has a codeshare, extract the 3-letter ICAO prefix from the
+    first codeshare ident (e.g. 'UAX4821' -> 'UAX') to use for the marketing
+    carrier operator lookup instead of the regional operator_icao."""
+    codeshares = flight.get("codeshares", [])
+    if codeshares == None or len(codeshares) == 0:
+        return None
+    cs = codeshares[0].strip()
+    # ICAO airline codes are 3 letters; strip trailing digits to get the prefix
+    prefix = ""
+    for ch in cs:
+        if ch >= "A" and ch <= "Z" or ch >= "a" and ch <= "z":
+            prefix = prefix + ch
+        else:
+            break
+    if len(prefix) >= 2:
+        return prefix.upper()
+    return None
+
 def parse_iso_time(iso_str):
     if iso_str == None or iso_str == "":
         return None
@@ -484,9 +503,15 @@ def main(config):
             aero_flight = lookup_aeroapi_flight(callsign_raw, api_key)
 
         if aero_flight != None and len(api_key) > 0:
-            operator_icao = aero_flight.get("operator_icao", None)
-            if operator_icao != None:
-                operator_short = lookup_aeroapi_operator(operator_icao, api_key)
+            # If a codeshare exists, look up the marketing carrier (e.g. UAX)
+            # rather than the regional operator flying the metal (e.g. SKW)
+            codeshare_icao = get_codeshare_operator_icao(aero_flight)
+            if codeshare_icao != None:
+                operator_short = lookup_aeroapi_operator(codeshare_icao, api_key)
+            if operator_short == None:
+                operator_icao = aero_flight.get("operator_icao", None)
+                if operator_icao != None:
+                    operator_short = lookup_aeroapi_operator(operator_icao, api_key)
             if operator_short == None:
                 operator_short = aero_flight.get("operator_icao", None)
 
