@@ -1,0 +1,9 @@
+---
+id: weather_radar
+name: Weather Radar
+summary: Animated US weather radar loop
+desc: Displays an animated US weather radar loop from Weather Underground. The radar image updates every 5 minutes.
+author: Geoff Finnegan
+fileName: weather_radar.star
+packageName: weather_radar
+recommendedInterval: 300
