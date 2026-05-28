@@ -85,6 +85,8 @@ def get_codeshare_operator_icao(flight):
     codeshares = flight.get("codeshares", [])
     if codeshares == None or len(codeshares) == 0:
         return None
+    if type(codeshares) == "string":
+        return None
     cs = codeshares[0].strip()
     # ICAO airline codes are 3 letters; strip trailing digits to get the prefix
     prefix = ""
