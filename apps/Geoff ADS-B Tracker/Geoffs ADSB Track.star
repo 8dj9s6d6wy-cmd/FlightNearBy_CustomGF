@@ -48,12 +48,20 @@ def lookup_aeroapi_flight(callsign, api_key):
     flights = data.get("flights", [])
     if len(flights) == 0:
         return None
-    # Prefer en route flight
+
+    # First priority: exact "En Route" status
+    for flight in flights:
+        if flight.get("status", "") == "En Route":
+            return flight
+
+    # Second priority: progress-based en route (status field absent or different)
     for flight in flights:
         progress = flight.get("progress_percent", 0)
         if progress != None and progress > 0 and progress < 100:
             return flight
-    return flights[0]
+
+    # No en route flight found — return nothing rather than a stale/future flight
+    return None
 
 def lookup_aeroapi_operator(operator_icao, api_key):
     if operator_icao == None or operator_icao == "" or api_key == None or api_key == "":
