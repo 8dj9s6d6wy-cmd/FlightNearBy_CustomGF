@@ -31,6 +31,77 @@ EMERGENCY_SQUAWKS = {
     "7700": "EMERGENCY",
 }
 
+# Local operator name lookup — avoids AeroAPI /operators calls.
+# Key = ICAO airline code, Value = short display name.
+# Add or edit entries here as needed.
+OPERATOR_NAMES = {
+    # ── NetJets / fractional ──────────────────────────────────────────────────
+    "EJA": "NetJets",
+    "EJM": "EJM",
+    "VJT": "VistaJet",
+    "FLJ": "FlexJet",
+    "TWY": "Wheels Up",
+    # ── US majors ─────────────────────────────────────────────────────────────
+    "AAL": "American",
+    "DAL": "Delta",
+    "UAL": "United",
+    "SWA": "Southwest",
+    "ASA": "Alaska",
+    "JBU": "JetBlue",
+    "HAL": "Hawaiian",
+    "FFT": "Frontier",
+    "NKS": "Spirit",
+    "SUN": "Sun Country",
+    "WN":  "Southwest",
+    # ── US regionals (often the actual operator on codeshare flights) ─────────
+    "RPA": "Republic",
+    "SKW": "SkyWest",
+    "ENY": "Envoy",
+    "PDT": "Piedmont",
+    "PSA": "PSA Airlines",
+    "CPZ": "Compass",
+    "GTI": "Atlas Air",
+    "QXE": "Horizon Air",
+    "BTA": "Air Wisconsin",
+    "TCF": "Transcom",
+    # ── US cargo ──────────────────────────────────────────────────────────────
+    "UPS": "UPS",
+    "FDX": "FedEx",
+    "ABX": "ABX Air",
+    "ATN": "Air Transport Intl",
+    "KFS": "Kalitta Air",
+    # ── US charter / other ────────────────────────────────────────────────────
+    "AWI": "Air Wisconsin",
+    "GJS": "GoJet",
+    "SWQ": "Swoop",
+    "VRD": "Virgin America",
+    "XJT": "ExpressJet",
+    # ── Military / government ─────────────────────────────────────────────────
+    "AFO": "Air Force",
+    "AIO": "Air Force",
+    "HXA": "Army",
+    "HXB": "Army",
+    "VMF": "Marines",
+    "NOF": "Navy",
+    "CGF": "Coast Guard",
+    # ── International majors ──────────────────────────────────────────────────
+    "BAW": "British Airways",
+    "DLH": "Lufthansa",
+    "AFR": "Air France",
+    "KLM": "KLM",
+    "UAE": "Emirates",
+    "QTR": "Qatar",
+    "SIA": "Singapore Air",
+    "CPA": "Cathay Pacific",
+    "ANA": "ANA",
+    "JAL": "JAL",
+    "AC":  "Air Canada",
+    "ACA": "Air Canada",
+    "WJA": "WestJet",
+    "VOZ": "Virgin Australia",
+    "QFA": "Qantas",
+}
+
 COMPASS_DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 
 # ── AeroAPI helpers ───────────────────────────────────────────────────────────
@@ -64,16 +135,9 @@ def lookup_aeroapi_flight(callsign, api_key):
     return None
 
 def lookup_aeroapi_operator(operator_icao, api_key):
-    if operator_icao == None or operator_icao == "" or api_key == None or api_key == "":
+    if operator_icao == None or operator_icao == "":
         return None
-    url = "%s/operators/%s" % (AEROAPI_BASE_URL, operator_icao)
-    headers = {"x-apikey": api_key}
-    response = http.get(url, headers = headers, ttl_seconds = 86400)
-    if response.status_code != 200:
-        print("AeroAPI operator lookup failed for %s: %d" % (operator_icao, response.status_code))
-        return None
-    data = response.json()
-    return data.get("shortname", None)
+    return OPERATOR_NAMES.get(operator_icao.upper(), None)
 
 # ── Flight data helpers ───────────────────────────────────────────────────────
 
@@ -512,9 +576,9 @@ def main(config):
         if len(callsign_raw) > 0 and len(api_key) > 0:
             aero_flight = lookup_aeroapi_flight(callsign_raw, api_key)
 
-        if aero_flight != None and len(api_key) > 0:
-            # If a codeshare exists, look up the marketing carrier (e.g. UAX)
-            # rather than the regional operator flying the metal (e.g. SKW)
+        if aero_flight != None:
+            # Prefer marketing carrier name from codeshare prefix (e.g. UAX → United)
+            # over the regional operator actually flying the metal (e.g. SKW → SkyWest)
             codeshare_icao = get_codeshare_operator_icao(aero_flight)
             if codeshare_icao != None:
                 operator_short = lookup_aeroapi_operator(codeshare_icao, api_key)
@@ -685,15 +749,20 @@ def main(config):
                     children = [
                         render.Text(content = registration, font = "tom-thumb"),
                         render.Text(content = aircraft_type, font = "tom-thumb"),
-                        render.Marquee(
+                        render.Box(
                             width = 43,
-                            child = render.Text(
-                                content = owner_display,
-                                font = "tom-thumb",
-                                color = "#AAAAAA",
+                            height = 7,
+                            child = render.Marquee(
+                                width = 43,
+                                child = render.Text(
+                                    content = owner_display,
+                                    font = "tom-thumb",
+                                    color = "#AAAAAA",
+                                ),
+                                scroll_direction = "horizontal",
+                                offset_start = 43,
+                                offset_end = 10,
                             ),
-                            scroll_direction = "horizontal",
-                            offset_start = 43,
                         ),
                     ],
                 ),
