@@ -143,7 +143,7 @@ def lookup_aeroapi_operator(operator_icao, api_key):
 
 def get_display_ident(flight):
     codeshares = flight.get("codeshares", [])
-    if codeshares != None and len(codeshares) > 0:
+    if codeshares != None and type(codeshares) != "string" and len(codeshares) > 0:
         return codeshares[0]
     ident_icao = flight.get("ident_icao", None)
     if ident_icao != None and ident_icao != "":
@@ -155,9 +155,7 @@ def get_codeshare_operator_icao(flight):
     first codeshare ident (e.g. 'UAX4821' -> 'UAX') to use for the marketing
     carrier operator lookup instead of the regional operator_icao."""
     codeshares = flight.get("codeshares", [])
-    if codeshares == None or len(codeshares) == 0:
-        return None
-    if type(codeshares) == "string":
+    if codeshares == None or type(codeshares) == "string" or len(codeshares) == 0:
         return None
     cs = codeshares[0].strip()
     # ICAO airline codes are 3 letters; strip trailing digits to get the prefix
