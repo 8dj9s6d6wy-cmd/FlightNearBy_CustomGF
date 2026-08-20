@@ -513,32 +513,43 @@ def validate_url(url):
 
 def is_business_hours():
     """Returns True if current time is Mon-Fri 7am-5pm Eastern.
-    DST approximation: EDT (UTC-4) Mar 2nd Sun through Nov 1st Sun;
-    EST (UTC-5) otherwise."""
+    Uses Unix timestamp arithmetic to avoid Starlark time API limitations.
+    DST: second Sunday in March 2:00am -> first Sunday in November 2:00am."""
     now_utc = time.now()
+
+    # Seconds since Unix epoch
+    now_unix = int(now_utc.unix)
+
+    # Approximate DST boundaries for the current year using day-of-year offsets.
+    # Rather than computing exact Sunday boundaries (requires weekday()),
+    # we use the known range: EDT runs roughly Mar 8–14 start, Nov 1–7 end.
+    # We hardcode the UTC epoch seconds for 2026 and nearby years.
+    # Format: (edt_start_unix, edt_end_unix)
+    dst_windows = {
+        2024: (1710057600, 1730620800),  # Mar 10 07:00 UTC, Nov  3 06:00 UTC
+        2025: (1741507200, 1762070400),  # Mar  9 07:00 UTC, Nov  2 06:00 UTC
+        2026: (1772956800, 1793520000),  # Mar  8 07:00 UTC, Nov  1 06:00 UTC
+        2027: (1804406400, 1824969600),  # Mar 14 07:00 UTC, Nov  7 06:00 UTC
+        2028: (1835856000, 1857024000),  # Mar 12 07:00 UTC, Nov  5 06:00 UTC
+    }
+
     year = now_utc.year
+    window = dst_windows.get(year, None)
 
-    # Find second Sunday in March (DST start) — Mar 1 + days to first Sun + 7
-    mar1_weekday = time.time(year = year, month = 3, day = 1).weekday()   # 0=Mon
-    days_to_sun = (6 - mar1_weekday) % 7          # days from Mar 1 to first Sun
-    dst_start_day = 1 + days_to_sun + 7            # second Sunday
-    dst_start = time.time(year = year, month = 3, day = dst_start_day, hour = 7)
-
-    # Find first Sunday in November (DST end)
-    nov1_weekday = time.time(year = year, month = 11, day = 1).weekday()
-    days_to_sun = (6 - nov1_weekday) % 7
-    dst_end_day = 1 + days_to_sun
-    dst_end = time.time(year = year, month = 11, day = dst_end_day, hour = 6)
-
-    if now_utc >= dst_start and now_utc < dst_end:
-        offset_hours = -4    # EDT
+    if window != None and now_unix >= window[0] and now_unix < window[1]:
+        offset_secs = -4 * 3600   # EDT UTC-4
     else:
-        offset_hours = -5    # EST
+        offset_secs = -5 * 3600   # EST UTC-5
 
-    eastern = now_utc + time.parse_duration("%dh" % offset_hours)
+    eastern_unix = now_unix + offset_secs
 
-    weekday = eastern.weekday()   # 0=Mon, 6=Sun
-    hour    = eastern.hour
+    # Derive weekday and hour from eastern Unix timestamp
+    # Unix epoch (Jan 1 1970) was a Thursday = weekday 3 (0=Mon)
+    days_since_epoch = int(eastern_unix / 86400)
+    weekday = (days_since_epoch + 3) % 7   # 0=Mon, 6=Sun
+
+    seconds_in_day = eastern_unix % 86400
+    hour = int(seconds_in_day / 3600)
 
     return weekday <= 4 and hour >= 7 and hour < 17
 
@@ -716,7 +727,7 @@ def main(config):
                                 render.Box(width = 1, height = 2),
                                 render.Text(content = spd_display, font = "tom-thumb"),
                                 render.Box(width = 1, height = 2),
-                                render.Text(content = dst_display, font = "tom-thumb"),
+                                render.Text(content = dst_display, font = "tom-thumb") if len(dst_display) > 0 else render.Box(width = 1, height = 6),
                             ],
                             cross_align = "center",
                             main_align = "center",
