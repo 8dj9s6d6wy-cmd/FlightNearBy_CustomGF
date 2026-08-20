@@ -511,6 +511,37 @@ def validate_url(url):
     url_regex = "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
     return len(re.findall(url_regex, url)) > 0
 
+def is_business_hours():
+    """Returns True if current time is Mon-Fri 7am-5pm Eastern.
+    DST approximation: EDT (UTC-4) Mar 2nd Sun through Nov 1st Sun;
+    EST (UTC-5) otherwise."""
+    now_utc = time.now()
+    year = now_utc.year
+
+    # Find second Sunday in March (DST start) — Mar 1 + days to first Sun + 7
+    mar1_weekday = time.time(year = year, month = 3, day = 1).weekday()   # 0=Mon
+    days_to_sun = (6 - mar1_weekday) % 7          # days from Mar 1 to first Sun
+    dst_start_day = 1 + days_to_sun + 7            # second Sunday
+    dst_start = time.time(year = year, month = 3, day = dst_start_day, hour = 7)
+
+    # Find first Sunday in November (DST end)
+    nov1_weekday = time.time(year = year, month = 11, day = 1).weekday()
+    days_to_sun = (6 - nov1_weekday) % 7
+    dst_end_day = 1 + days_to_sun
+    dst_end = time.time(year = year, month = 11, day = dst_end_day, hour = 6)
+
+    if now_utc >= dst_start and now_utc < dst_end:
+        offset_hours = -4    # EDT
+    else:
+        offset_hours = -5    # EST
+
+    eastern = now_utc + time.parse_duration("%dh" % offset_hours)
+
+    weekday = eastern.weekday()   # 0=Mon, 6=Sun
+    hour    = eastern.hour
+
+    return weekday <= 4 and hour >= 7 and hour < 17
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main(config):
@@ -571,7 +602,7 @@ def main(config):
             return show_error("NO AIRCRAFT WITH POSITION DATA")
 
         callsign_raw = get_callsign(aircraft)
-        if len(callsign_raw) > 0 and len(api_key) > 0:
+        if len(callsign_raw) > 0 and len(api_key) > 0 and is_business_hours():
             aero_flight = lookup_aeroapi_flight(callsign_raw, api_key)
 
         if aero_flight != None:
