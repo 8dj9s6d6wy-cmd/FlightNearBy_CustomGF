@@ -60,7 +60,6 @@ OPERATOR_NAMES = {
     "PDT": "Piedmont",
     "PSA": "PSA Airlines",
     "CPZ": "Compass",
-    "GTI": "Atlas Air",
     "QXE": "Horizon Air",
     "BTA": "Air Wisconsin",
     "TCF": "Transcom",
@@ -70,6 +69,7 @@ OPERATOR_NAMES = {
     "ABX": "ABX Air",
     "ATN": "Air Transport Intl",
     "KFS": "Kalitta Air",
+    "GTI": "Atlas Air",
     # ── US charter / other ────────────────────────────────────────────────────
     "AWI": "Air Wisconsin",
     "GJS": "GoJet",
@@ -100,6 +100,35 @@ OPERATOR_NAMES = {
     "WJA": "WestJet",
     "VOZ": "Virgin Australia",
     "QFA": "Qantas",
+}
+
+# ICAO callsign prefixes eligible for an AeroAPI lookup. Restricting lookups to
+# these carriers (US majors, US cargo/freight, and NetJets/Executive Jet) keeps
+# AeroAPI call volume down — regionals, GA, military, and other charter/other
+# traffic never trigger a call, even if they're the nearest aircraft.
+AEROAPI_ELIGIBLE_CARRIERS = {
+    # US majors
+    "AAL": True,
+    "DAL": True,
+    "UAL": True,
+    "SWA": True,
+    "ASA": True,
+    "JBU": True,
+    "HAL": True,
+    "FFT": True,
+    "NKS": True,
+    "SUN": True,
+    "WN": True,
+    # US cargo / freight
+    "UPS": True,
+    "FDX": True,
+    "ABX": True,
+    "ATN": True,
+    "KFS": True,
+    "GTI": True,
+    # NetJets / fractional
+    "EJA": True,
+    "EJM": True,
 }
 
 COMPASS_DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
@@ -150,17 +179,13 @@ def get_display_ident(flight):
         return ident_icao
     return flight.get("ident", "")
 
-def get_codeshare_operator_icao(flight):
-    """If the flight has a codeshare, extract the 3-letter ICAO prefix from the
-    first codeshare ident (e.g. 'UAX4821' -> 'UAX') to use for the marketing
-    carrier operator lookup instead of the regional operator_icao."""
-    codeshares = flight.get("codeshares", [])
-    if codeshares == None or type(codeshares) == "string" or len(codeshares) == 0:
+def extract_icao_prefix(ident):
+    """Extracts the leading alphabetic ICAO airline prefix from a flight ident
+    (e.g. 'SWA2269' -> 'SWA'). Returns None if fewer than 2 leading letters."""
+    if ident == None or ident == "":
         return None
-    cs = codeshares[0].strip()
-    # ICAO airline codes are 3 letters; strip trailing digits to get the prefix
     prefix = ""
-    for ch in cs:
+    for ch in ident.strip():
         if ch >= "A" and ch <= "Z" or ch >= "a" and ch <= "z":
             prefix = prefix + ch
         else:
@@ -168,6 +193,15 @@ def get_codeshare_operator_icao(flight):
     if len(prefix) >= 2:
         return prefix.upper()
     return None
+
+def get_codeshare_operator_icao(flight):
+    """If the flight has a codeshare, extract the ICAO prefix from the first
+    codeshare ident (e.g. 'UAX4821' -> 'UAX') to use for the marketing carrier
+    operator lookup instead of the regional operator_icao."""
+    codeshares = flight.get("codeshares", [])
+    if codeshares == None or type(codeshares) == "string" or len(codeshares) == 0:
+        return None
+    return extract_icao_prefix(codeshares[0])
 
 def parse_iso_time(iso_str):
     if iso_str == None or iso_str == "":
@@ -511,6 +545,48 @@ def validate_url(url):
     url_regex = "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
     return len(re.findall(url_regex, url)) > 0
 
+def is_business_hours():
+    """Returns True if current time is Mon-Fri 7am-5pm Eastern.
+    Uses Unix timestamp arithmetic to avoid Starlark time API limitations.
+    DST: second Sunday in March 2:00am -> first Sunday in November 2:00am."""
+    now_utc = time.now()
+
+    # Seconds since Unix epoch
+    now_unix = int(now_utc.unix)
+
+    # Approximate DST boundaries for the current year using day-of-year offsets.
+    # Rather than computing exact Sunday boundaries (requires weekday()),
+    # we use the known range: EDT runs roughly Mar 8–14 start, Nov 1–7 end.
+    # We hardcode the UTC epoch seconds for 2026 and nearby years.
+    # Format: (edt_start_unix, edt_end_unix)
+    dst_windows = {
+        2024: (1710057600, 1730620800),  # Mar 10 07:00 UTC, Nov  3 06:00 UTC
+        2025: (1741507200, 1762070400),  # Mar  9 07:00 UTC, Nov  2 06:00 UTC
+        2026: (1772956800, 1793520000),  # Mar  8 07:00 UTC, Nov  1 06:00 UTC
+        2027: (1804406400, 1824969600),  # Mar 14 07:00 UTC, Nov  7 06:00 UTC
+        2028: (1835856000, 1857024000),  # Mar 12 07:00 UTC, Nov  5 06:00 UTC
+    }
+
+    year = now_utc.year
+    window = dst_windows.get(year, None)
+
+    if window != None and now_unix >= window[0] and now_unix < window[1]:
+        offset_secs = -4 * 3600   # EDT UTC-4
+    else:
+        offset_secs = -5 * 3600   # EST UTC-5
+
+    eastern_unix = now_unix + offset_secs
+
+    # Derive weekday and hour from eastern Unix timestamp
+    # Unix epoch (Jan 1 1970) was a Thursday = weekday 3 (0=Mon)
+    days_since_epoch = int(eastern_unix / 86400)
+    weekday = (days_since_epoch + 3) % 7   # 0=Mon, 6=Sun
+
+    seconds_in_day = eastern_unix % 86400
+    hour = int(seconds_in_day / 3600)
+
+    return weekday <= 4 and hour >= 7 and hour < 17
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main(config):
@@ -571,7 +647,9 @@ def main(config):
             return show_error("NO AIRCRAFT WITH POSITION DATA")
 
         callsign_raw = get_callsign(aircraft)
-        if len(callsign_raw) > 0 and len(api_key) > 0:
+        carrier_prefix = extract_icao_prefix(callsign_raw)
+        is_aeroapi_eligible = carrier_prefix != None and carrier_prefix in AEROAPI_ELIGIBLE_CARRIERS
+        if is_aeroapi_eligible and len(api_key) > 0 and is_business_hours():
             aero_flight = lookup_aeroapi_flight(callsign_raw, api_key)
 
         if aero_flight != None:
@@ -685,7 +763,7 @@ def main(config):
                                 render.Box(width = 1, height = 2),
                                 render.Text(content = spd_display, font = "tom-thumb"),
                                 render.Box(width = 1, height = 2),
-                                render.Text(content = dst_display, font = "tom-thumb"),
+                                render.Text(content = dst_display, font = "tom-thumb") if len(dst_display) > 0 else render.Box(width = 1, height = 6),
                             ],
                             cross_align = "center",
                             main_align = "center",
