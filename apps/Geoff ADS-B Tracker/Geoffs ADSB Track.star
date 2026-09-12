@@ -60,7 +60,6 @@ OPERATOR_NAMES = {
     "PDT": "Piedmont",
     "PSA": "PSA Airlines",
     "CPZ": "Compass",
-    "GTI": "Atlas Air",
     "QXE": "Horizon Air",
     "BTA": "Air Wisconsin",
     "TCF": "Transcom",
@@ -70,6 +69,7 @@ OPERATOR_NAMES = {
     "ABX": "ABX Air",
     "ATN": "Air Transport Intl",
     "KFS": "Kalitta Air",
+    "GTI": "Atlas Air",
     # ── US charter / other ────────────────────────────────────────────────────
     "AWI": "Air Wisconsin",
     "GJS": "GoJet",
@@ -100,6 +100,35 @@ OPERATOR_NAMES = {
     "WJA": "WestJet",
     "VOZ": "Virgin Australia",
     "QFA": "Qantas",
+}
+
+# ICAO callsign prefixes eligible for an AeroAPI lookup. Restricting lookups to
+# these carriers (US majors, US cargo/freight, and NetJets/Executive Jet) keeps
+# AeroAPI call volume down — regionals, GA, military, and other charter/other
+# traffic never trigger a call, even if they're the nearest aircraft.
+AEROAPI_ELIGIBLE_CARRIERS = {
+    # US majors
+    "AAL": True,
+    "DAL": True,
+    "UAL": True,
+    "SWA": True,
+    "ASA": True,
+    "JBU": True,
+    "HAL": True,
+    "FFT": True,
+    "NKS": True,
+    "SUN": True,
+    "WN": True,
+    # US cargo / freight
+    "UPS": True,
+    "FDX": True,
+    "ABX": True,
+    "ATN": True,
+    "KFS": True,
+    "GTI": True,
+    # NetJets / fractional
+    "EJA": True,
+    "EJM": True,
 }
 
 COMPASS_DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
@@ -150,17 +179,13 @@ def get_display_ident(flight):
         return ident_icao
     return flight.get("ident", "")
 
-def get_codeshare_operator_icao(flight):
-    """If the flight has a codeshare, extract the 3-letter ICAO prefix from the
-    first codeshare ident (e.g. 'UAX4821' -> 'UAX') to use for the marketing
-    carrier operator lookup instead of the regional operator_icao."""
-    codeshares = flight.get("codeshares", [])
-    if codeshares == None or type(codeshares) == "string" or len(codeshares) == 0:
+def extract_icao_prefix(ident):
+    """Extracts the leading alphabetic ICAO airline prefix from a flight ident
+    (e.g. 'SWA2269' -> 'SWA'). Returns None if fewer than 2 leading letters."""
+    if ident == None or ident == "":
         return None
-    cs = codeshares[0].strip()
-    # ICAO airline codes are 3 letters; strip trailing digits to get the prefix
     prefix = ""
-    for ch in cs:
+    for ch in ident.strip():
         if ch >= "A" and ch <= "Z" or ch >= "a" and ch <= "z":
             prefix = prefix + ch
         else:
@@ -168,6 +193,15 @@ def get_codeshare_operator_icao(flight):
     if len(prefix) >= 2:
         return prefix.upper()
     return None
+
+def get_codeshare_operator_icao(flight):
+    """If the flight has a codeshare, extract the ICAO prefix from the first
+    codeshare ident (e.g. 'UAX4821' -> 'UAX') to use for the marketing carrier
+    operator lookup instead of the regional operator_icao."""
+    codeshares = flight.get("codeshares", [])
+    if codeshares == None or type(codeshares) == "string" or len(codeshares) == 0:
+        return None
+    return extract_icao_prefix(codeshares[0])
 
 def parse_iso_time(iso_str):
     if iso_str == None or iso_str == "":
@@ -613,7 +647,9 @@ def main(config):
             return show_error("NO AIRCRAFT WITH POSITION DATA")
 
         callsign_raw = get_callsign(aircraft)
-        if len(callsign_raw) > 0 and len(api_key) > 0 and is_business_hours():
+        carrier_prefix = extract_icao_prefix(callsign_raw)
+        is_aeroapi_eligible = carrier_prefix != None and carrier_prefix in AEROAPI_ELIGIBLE_CARRIERS
+        if is_aeroapi_eligible and len(api_key) > 0 and is_business_hours():
             aero_flight = lookup_aeroapi_flight(callsign_raw, api_key)
 
         if aero_flight != None:
