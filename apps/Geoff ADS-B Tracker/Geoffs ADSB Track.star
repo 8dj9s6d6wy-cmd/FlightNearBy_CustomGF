@@ -63,6 +63,7 @@ OPERATOR_NAMES = {
     "QXE": "Horizon Air",
     "BTA": "Air Wisconsin",
     "TCF": "Transcom",
+    "GJS": "GoJet",
     # ── US cargo ──────────────────────────────────────────────────────────────
     "UPS": "UPS",
     "FDX": "FedEx",
@@ -72,7 +73,6 @@ OPERATOR_NAMES = {
     "GTI": "Atlas Air",
     # ── US charter / other ────────────────────────────────────────────────────
     "AWI": "Air Wisconsin",
-    "GJS": "GoJet",
     "SWQ": "Swoop",
     "VRD": "Virgin America",
     "XJT": "ExpressJet",
@@ -103,9 +103,12 @@ OPERATOR_NAMES = {
 }
 
 # ICAO callsign prefixes eligible for an AeroAPI lookup. Restricting lookups to
-# these carriers (US majors, US cargo/freight, and NetJets/Executive Jet) keeps
-# AeroAPI call volume down — regionals, GA, military, and other charter/other
-# traffic never trigger a call, even if they're the nearest aircraft.
+# these carriers (US majors, major-affiliated regionals, US cargo/freight, and
+# NetJets/Executive Jet) keeps AeroAPI call volume down — GA, military, and
+# other charter/other traffic never trigger a call, even if they're the
+# nearest aircraft. Regionals are included because their raw ADS-B callsign
+# shows the regional's own code (e.g. ENY), not the major they're flying for
+# (e.g. AAL) — only an AeroAPI lookup can resolve the codeshare to the major.
 AEROAPI_ELIGIBLE_CARRIERS = {
     # US majors
     "AAL": True,
@@ -119,6 +122,16 @@ AEROAPI_ELIGIBLE_CARRIERS = {
     "NKS": True,
     "SUN": True,
     "WN": True,
+    # US regionals (major-affiliated codeshare operators)
+    "RPA": True,
+    "SKW": True,
+    "ENY": True,
+    "PDT": True,
+    "PSA": True,
+    "CPZ": True,
+    "QXE": True,
+    "BTA": True,
+    "GJS": True,
     # US cargo / freight
     "UPS": True,
     "FDX": True,
