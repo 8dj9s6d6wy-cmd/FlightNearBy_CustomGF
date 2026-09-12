@@ -598,6 +598,7 @@ def main(config):
     custom_lat = float(config.str("custom_lat", "0.0"))
     custom_lon = float(config.str("custom_lon", "0.0"))
     conversion_unit = config.str("units", DEFAULT_CONVERSION_UNITS)
+    ignore_business_hours = config.bool("debug_ignore_business_hours", False)
 
     if use_custom_coords and custom_lat == 0.0 and custom_lon == 0.0:
         use_custom_coords = False
@@ -649,7 +650,7 @@ def main(config):
         callsign_raw = get_callsign(aircraft)
         carrier_prefix = extract_icao_prefix(callsign_raw)
         is_aeroapi_eligible = carrier_prefix != None and carrier_prefix in AEROAPI_ELIGIBLE_CARRIERS
-        if is_aeroapi_eligible and len(api_key) > 0 and is_business_hours():
+        if is_aeroapi_eligible and len(api_key) > 0 and (ignore_business_hours or is_business_hours()):
             aero_flight = lookup_aeroapi_flight(callsign_raw, api_key)
 
         if aero_flight != None:
@@ -931,6 +932,13 @@ def get_schema():
                 icon = "vial",
                 default = dummy_options[0].value,
                 options = dummy_options,
+            ),
+            schema.Toggle(
+                id = "debug_ignore_business_hours",
+                name = "Debug: Ignore Business Hours",
+                desc = "Allow AeroAPI lookups outside Mon-Fri 7am-5pm Eastern. For testing only — leave off to limit API usage.",
+                icon = "bug",
+                default = False,
             ),
         ],
     )
