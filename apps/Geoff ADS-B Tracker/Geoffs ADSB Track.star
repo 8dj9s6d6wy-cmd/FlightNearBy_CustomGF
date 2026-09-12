@@ -181,6 +181,14 @@ def lookup_aeroapi_operator(operator_icao, api_key):
         return None
     return OPERATOR_NAMES.get(operator_icao.upper(), None)
 
+def has_route_data(flight):
+    """AeroAPI often returns no origin/destination when queried by a regional's
+    own operating ident, but returns full route data when queried by the
+    marketing carrier's codeshare ident instead."""
+    if flight == None:
+        return False
+    return flight.get("origin", None) != None and flight.get("destination", None) != None
+
 # ── Flight data helpers ───────────────────────────────────────────────────────
 
 def get_display_ident(flight):
@@ -665,6 +673,17 @@ def main(config):
         is_aeroapi_eligible = carrier_prefix != None and carrier_prefix in AEROAPI_ELIGIBLE_CARRIERS
         if is_aeroapi_eligible and len(api_key) > 0 and (ignore_business_hours or is_business_hours()):
             aero_flight = lookup_aeroapi_flight(callsign_raw, api_key)
+
+            # AeroAPI frequently omits origin/destination when queried by a
+            # regional's own operating ident. If a codeshare ident is listed,
+            # re-query with that instead — it's the one that actually carries
+            # route data.
+            if aero_flight != None and not has_route_data(aero_flight):
+                codeshares = aero_flight.get("codeshares", [])
+                if codeshares != None and type(codeshares) != "string" and len(codeshares) > 0:
+                    codeshare_flight = lookup_aeroapi_flight(codeshares[0], api_key)
+                    if codeshare_flight != None and has_route_data(codeshare_flight):
+                        aero_flight = codeshare_flight
 
         if aero_flight != None:
             # Prefer marketing carrier name from codeshare prefix (e.g. UAX → United)
