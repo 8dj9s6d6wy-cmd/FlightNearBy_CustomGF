@@ -209,8 +209,10 @@ def extract_icao_prefix(ident):
     (e.g. 'SWA2269' -> 'SWA'). Returns None if fewer than 2 leading letters."""
     if ident == None or ident == "":
         return None
+    trimmed = ident.strip()
     prefix = ""
-    for ch in ident.strip():
+    for i in range(len(trimmed)):
+        ch = trimmed[i]
         if ch >= "A" and ch <= "Z" or ch >= "a" and ch <= "z":
             prefix = prefix + ch
         else:
