@@ -146,6 +146,34 @@ AEROAPI_ELIGIBLE_CARRIERS = {
 
 COMPASS_DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 
+# Aircraft type/registration lookups keyed by ICAO hex. An airframe's type and
+# registration essentially never change, so cache the answers for a long time.
+TAR1090_DB_TTL = 86400
+HEXDB_URL = "https://hexdb.io/api/v1/aircraft/"
+HEXDB_TTL = 604800
+
+# ADS-B emitter category -> short class label. Shown (dimmed) only when no
+# source can name the actual type designator, so the screen still says
+# something more useful than "Unknown". Kept to ~10 chars to fit the type column.
+CATEGORY_LABELS = {
+    "A1": "LIGHT",
+    "A2": "SMALL",
+    "A3": "LARGE",
+    "A4": "HI VORTEX",
+    "A5": "HEAVY",
+    "A6": "HI PERF",
+    "A7": "ROTOR",
+    "B1": "GLIDER",
+    "B2": "BALLOON",
+    "B3": "SKYDIVER",
+    "B4": "ULTRALIGHT",
+    "B6": "UAV",
+    "B7": "SPACE",
+    "C1": "SURF VEH",
+    "C2": "SURF VEH",
+    "C3": "OBSTACLE",
+}
+
 def dbg(enabled, msg):
     if enabled:
         print("[ADSB] " + msg)
@@ -465,6 +493,111 @@ def get_callsign(aircraft):
         return aircraft["flight"].strip()
     return ""
 
+# ── Aircraft identity (registration / type) ───────────────────────────────────
+
+def clean_id(value):
+    """Returns value stripped and uppercased, or None if it isn't a non-empty string."""
+    if value == None or type(value) != "string":
+        return None
+    trimmed = value.strip().upper()
+    if trimmed == "":
+        return None
+    return trimmed
+
+def safe_json(response):
+    """Decodes a JSON object body, or returns None on a non-200 status or a
+    non-JSON body. Starlark has no try/catch and response.json() aborts the
+    whole render on bad JSON, so a proxy answering 200 with an HTML page (or a
+    third-party outage page) has to be screened out first."""
+    if response.status_code != 200:
+        return None
+    if not response.body().strip().startswith("{"):
+        return None
+    return response.json()
+
+def is_icao_hex(hex_id):
+    """True for a plain 24-bit ICAO address. tar1090 marks TIS-B/anonymous
+    targets with a leading '~', which no aircraft database contains."""
+    return hex_id != None and len(re.findall("^[0-9a-fA-F]{6}$", hex_id)) > 0
+
+def lookup_tar1090_db(base_url, hex_id):
+    """Looks the hex up in the receiver's own tar1090 aircraft database, using
+    the same sharded lookup as the tar1090 web UI (db-<version>/<hex prefix>.js,
+    entry = [registration, type, flags, long name], deeper shards listed under
+    "children"). Returns (registration, type) or None. Plain PiAware/dump1090
+    installs have no version.json, so this quietly returns None there."""
+    version = safe_json(http.get(base_url + "/version.json", ttl_seconds = 1800))
+    if version == None or version.get("databaseVersion", None) == None:
+        return None
+    hex_up = hex_id.upper()
+    for level in range(1, len(hex_up)):
+        url = "%s/db-%s/%s.js" % (base_url, version["databaseVersion"], hex_up[0:level])
+        shard = safe_json(http.get(url, ttl_seconds = TAR1090_DB_TTL))
+        if shard == None:
+            return None
+        entry = shard.get(hex_up[level:], None)
+        if entry != None and type(entry) == "list" and len(entry) > 1:
+            return (entry[0], entry[1])
+        if hex_up[0:level + 1] not in shard.get("children", []):
+            return None
+    return None
+
+def lookup_hexdb(hex_id):
+    """Looks the hex up on hexdb.io (free, no key, covers GA and military as
+    well as airlines). Returns (registration, type) or None."""
+    data = safe_json(http.get(HEXDB_URL + hex_id.upper(), ttl_seconds = HEXDB_TTL))
+    if data == None:
+        return None
+    return (data.get("Registration", None), data.get("ICAOTypeCode", None))
+
+def fill_identity(ident, registration, type_code, source):
+    """Fills whichever of registration/type is still empty from one source."""
+    reg = clean_id(registration)
+    typ = clean_id(type_code)
+    if ident["registration"] == None and reg != None:
+        ident["registration"] = reg
+        ident["registration_src"] = source
+    if ident["type"] == None and typ != None:
+        ident["type"] = typ
+        ident["type_src"] = source
+
+def identity_complete(ident):
+    return ident["registration"] != None and ident["type"] != None
+
+def resolve_identity(aircraft, aero_flight, base_url, allow_network, debug):
+    """Resolves the registration and ICAO type designator, cheapest source
+    first, so the display only falls back to the hex / a category label when
+    every source has failed. Keyed by ICAO hex, so it works for GA and military
+    traffic and does not depend on AeroAPI, its carrier list, or business hours.
+      1. r/t on the aircraft.json record (readsb with an aircraft DB) - free
+      2. the AeroAPI flight already fetched for route data - free
+      3. the receiver's own tar1090 database
+      4. hexdb.io
+    """
+    ident = {"registration": None, "type": None, "registration_src": None, "type_src": None}
+    fill_identity(ident, aircraft.get("r", None), aircraft.get("t", None), "aircraft.json")
+    if aero_flight != None:
+        fill_identity(ident, aero_flight.get("registration", None), aero_flight.get("aircraft_type", None), "aeroapi")
+
+    hex_id = aircraft.get("hex", None)
+    if allow_network and not identity_complete(ident) and is_icao_hex(hex_id):
+        db_hit = lookup_tar1090_db(base_url.rstrip("/"), hex_id)
+        if db_hit != None:
+            fill_identity(ident, db_hit[0], db_hit[1], "tar1090 db")
+        if not identity_complete(ident):
+            web_hit = lookup_hexdb(hex_id)
+            if web_hit != None:
+                fill_identity(ident, web_hit[0], web_hit[1], "hexdb.io")
+
+    dbg(debug, "identity hex=%s type=%s (via %s) registration=%s (via %s)" % (
+        hex_id,
+        ident["type"],
+        ident["type_src"],
+        ident["registration"],
+        ident["registration_src"],
+    ))
+    return ident
+
 # ── Dummy data ────────────────────────────────────────────────────────────────
 
 def generate_dummy_aircraft():
@@ -736,6 +869,9 @@ def main(config):
 
     # ── Resolve display values ────────────────────────────────────────────────
 
+    # Test modes stay offline: only the dummy data (and its AeroAPI stub) is used.
+    ident = resolve_identity(aircraft, aero_flight, piaware_url, dummy_mode == "none", debug_logging)
+
     if aero_flight != None:
         display_callsign = get_display_ident(aero_flight).upper()
     else:
@@ -762,19 +898,20 @@ def main(config):
 
     (bottom_content, bottom_color) = build_bottom_bar(aircraft, aero_flight, is_emergency)
 
-    # Registration
-    registration = None
-    if aero_flight != None:
-        registration = aero_flight.get("registration", None)
-    if registration == None or registration == "":
+    # Registration and type: see resolve_identity for the source order
+    registration = ident["registration"]
+    if registration == None:
         registration = aircraft.get("hex", "------").upper()
 
-    # Aircraft type
-    aircraft_type = "Unknown"
-    if aero_flight != None:
-        aircraft_type = aero_flight.get("aircraft_type", "Unknown")
-        if aircraft_type == None:
-            aircraft_type = "Unknown"
+    type_code = ident["type"]
+    if type_code != None:
+        aircraft_type = type_code
+        type_color = "#FFFFFF"
+    else:
+        # Nothing could name the type: show the ADS-B emitter class, dimmed so
+        # it reads as a category rather than a confirmed type.
+        aircraft_type = CATEGORY_LABELS.get(aircraft.get("category", ""), "Unknown")
+        type_color = "#AAAAAA"
 
     # Operator display
     if operator_short != None and operator_short != "":
@@ -791,8 +928,10 @@ def main(config):
     icon_color = get_altitude_icon_color(icon_alt)
     addrtype = aircraft.get("type", "adsb_icao")
 
+    # The icon service wants a real type designator; a class label isn't one.
+    icon_type = type_code if type_code != None else "Unknown"
     aircraft_icon = get_aircraft_icon(
-        aircraft["category"], aircraft_type, aircraft_type, addrtype, icon_color
+        aircraft["category"], icon_type, icon_type, addrtype, icon_color
     )
     if aircraft_icon == None:
         aircraft_icon = BLANK_ASSET.readall()
@@ -893,7 +1032,7 @@ def main(config):
                     cross_align = "center",
                     children = [
                         render.Text(content = registration, font = "tom-thumb"),
-                        render.Text(content = aircraft_type, font = "tom-thumb"),
+                        render.Text(content = aircraft_type, font = "tom-thumb", color = type_color),
                         render.Box(
                             width = 43,
                             height = 7,
