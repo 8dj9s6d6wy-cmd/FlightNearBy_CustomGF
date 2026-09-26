@@ -178,6 +178,20 @@ def dbg(enabled, msg):
     if enabled:
         print("[ADSB] " + msg)
 
+def pad(text, width):
+    # Starlark's % operator has no width flag, so pad by hand.
+    return text + " " * (width - len(text))
+
+def dbg_render_values(rows):
+    """Prints every value the two frames display, one line per value, as
+    (label, shown value, detail on where it came from) rows."""
+    print("[ADSB] render values (what the display is showing):")
+    for row in rows:
+        line = "[ADSB]   %s %s" % (pad(row[0], 15), pad(str(row[1]), 20))
+        if row[2] != "":
+            line = line + " <- " + row[2]
+        print(line.rstrip())
+
 # ── AeroAPI helpers ───────────────────────────────────────────────────────────
 
 def lookup_aeroapi_flight(callsign, api_key):
@@ -760,6 +774,7 @@ def main(config):
     conversion_unit = config.str("units", DEFAULT_CONVERSION_UNITS)
     ignore_business_hours = config.bool("debug_ignore_business_hours", False)
     debug_logging = config.bool("debug_logging", False)
+    debug_render_values = config.bool("debug_render_values", False)
 
     if use_custom_coords and custom_lat == 0.0 and custom_lon == 0.0:
         use_custom_coords = False
@@ -874,10 +889,13 @@ def main(config):
 
     if aero_flight != None:
         display_callsign = get_display_ident(aero_flight).upper()
+        callsign_src = "aeroapi ident"
     else:
         display_callsign = get_callsign(aircraft).upper()
+        callsign_src = "aircraft.json flight"
     if len(display_callsign) == 0:
         display_callsign = aircraft.get("hex", "------").upper()
+        callsign_src = "hex (no callsign)"
 
     is_nja = display_callsign.startswith("EJA") or display_callsign.startswith("EJM")
     is_emergency = "squawk" in aircraft and aircraft["squawk"] in EMERGENCY_SQUAWKS
@@ -916,11 +934,14 @@ def main(config):
     # Operator display
     if operator_short != None and operator_short != "":
         owner_display = operator_short
+        owner_src = "operator lookup"
     elif aero_flight != None:
         fallback = aero_flight.get("operator_icao", None)
         owner_display = fallback if fallback != None else "Unknown"
+        owner_src = "aeroapi operator_icao" if fallback != None else "none found"
     else:
         owner_display = "Unknown"
+        owner_src = "none found (no AeroAPI flight)"
 
     # ── Aircraft icon ─────────────────────────────────────────────────────────
 
@@ -933,8 +954,40 @@ def main(config):
     aircraft_icon = get_aircraft_icon(
         aircraft["category"], icon_type, icon_type, addrtype, icon_color
     )
+    icon_state = "icon service"
     if aircraft_icon == None:
         aircraft_icon = BLANK_ASSET.readall()
+        icon_state = "blank (icon service failed)"
+
+    # ── Render debug ──────────────────────────────────────────────────────────
+
+    if debug_render_values:
+        if is_emergency:
+            bottom_src = "emergency squawk"
+        elif bottom_content.startswith("HDG:"):
+            bottom_src = "track (no route data)"
+        else:
+            bottom_src = "aeroapi route"
+
+        if use_custom_coords and "lat" in aircraft and "lon" in aircraft:
+            dst_src = "custom coords"
+        elif "r_dst" in aircraft:
+            dst_src = "r_dst=%s" % aircraft["r_dst"]
+        else:
+            dst_src = "no r_dst"
+
+        dbg_render_values([
+            ("F1 label", "NJA logo" if is_nja else "Flight", "callsign starts EJA/EJM" if is_nja else ""),
+            ("F1 callsign", display_callsign, callsign_src),
+            ("F1 altitude", alt_display, "alt_baro=%s units=%s" % (alt_baro, conversion_unit)),
+            ("F1 speed", spd_display, "gs=%s units=%s" % (aircraft.get("gs", 0), conversion_unit)),
+            ("F1 distance", dst_display if len(dst_display) > 0 else "(blank)", dst_src),
+            ("F1 bottom bar", bottom_content, "%s, color=%s%s" % (bottom_src, bottom_color, ", marquee" if len(bottom_content) > 14 else "")),
+            ("F2 icon", icon_type, "%s, category=%s color=%s addr=%s" % (icon_state, aircraft["category"], icon_color, addrtype)),
+            ("F2 registration", registration, ident["registration_src"] if ident["registration_src"] != None else "hex (no source had it)"),
+            ("F2 type", aircraft_type, "%s, color=%s" % (ident["type_src"] if ident["type_src"] != None else "category label (no source had it)", type_color)),
+            ("F2 owner", owner_display, "%s, marquee" % owner_src),
+        ])
 
     # ── Frame 1 ───────────────────────────────────────────────────────────────
 
@@ -1151,6 +1204,13 @@ def get_schema():
                 id = "debug_logging",
                 name = "Debug: Verbose Logging",
                 desc = "Print aircraft selection and AeroAPI lookup details to the render log. For testing only.",
+                icon = "bug",
+                default = False,
+            ),
+            schema.Toggle(
+                id = "debug_render_values",
+                name = "Debug: Render Values",
+                desc = "Print every value shown on the display, and where it came from, to the render log. For testing only.",
                 icon = "bug",
                 default = False,
             ),
