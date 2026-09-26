@@ -338,7 +338,7 @@ def format_time_remaining(estimated_on_str):
     hours = int(total_minutes / 60)
     minutes = total_minutes % 60
     if hours > 0:
-        return "%dh %dm" % (hours, minutes)
+        return "%dh%dm" % (hours, minutes)
     return "%dm" % minutes
 
 def build_bottom_bar(aircraft, aero_flight, is_emergency):
@@ -366,16 +366,18 @@ def build_bottom_bar(aircraft, aero_flight, is_emergency):
             cancelled = aero_flight.get("cancelled", False)
             diverted = aero_flight.get("diverted", False)
 
+            # The bar fits 16 characters and its marquee never scrolls, so
+            # anything longer is simply not shown. Keep every string within 16.
             if cancelled:
-                return ("%s > %s CNCLD" % (origin_code, dest_code), "#FF6600")
+                return ("%s %s CNCLD" % (origin_code, dest_code), "#FF6600")
             elif diverted:
-                return ("%s > %s DIVRT" % (origin_code, dest_code), "#FF6600")
+                return ("%s %s DIVRT" % (origin_code, dest_code), "#FF6600")
             elif progress != None and progress >= 100:
                 return ("%s > %s ARVD" % (origin_code, dest_code), "#AAAAAA")
             elif progress != None and progress > 0:
                 time_remaining = format_time_remaining(aero_flight.get("estimated_on", None))
                 if time_remaining != None:
-                    return ("%s --- %s --- %s" % (origin_code, time_remaining, dest_code), "#FFFFFF")
+                    return ("%s %s %s" % (origin_code, time_remaining, dest_code), "#FFFFFF")
                 return ("%s > %s" % (origin_code, dest_code), "#FFFFFF")
             else:
                 return ("%s > %s" % (origin_code, dest_code), "#FFFFFF")
@@ -1357,7 +1359,7 @@ def main(config):
                             ],
                             cross_align = "center",
                             expanded = True,
-                        ) if len(bottom_content) <= 14 else render.Marquee(
+                        ) if len(bottom_content) <= 16 else render.Marquee(
                             width = 64,
                             child = render.Text(
                                 content = bottom_content,
